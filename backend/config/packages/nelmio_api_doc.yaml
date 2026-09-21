@@ -1,9 +1,0 @@
-nelmio_api_doc:
-  documentation:
-    info:
-      title: Owadan API
-      description: Owadan MVP REST API
-      version: 1.0.0
-  areas:
-    path_patterns:
-      - ^/api

@@ -34,11 +34,39 @@ class User implements UserInterface
         $this->createdAt = new \DateTimeImmutable();
     }
 
-    public function getId(): Uuid { return $this->id; }
-    public function getPhoneNumber(): string { return $this->phoneNumber; }
-    public function getUserIdentifier(): string { return $this->phoneNumber; }
-    public function getRoles(): array { return array_values(array_unique([...$this->roles, 'ROLE_CUSTOMER'])); }
-    public function setRoles(array $roles): self { $this->roles = $roles; return $this; }
-    public function isActive(): bool { return $this->active; }
-    public function eraseCredentials(): void { }
+    public function getId(): Uuid
+    {
+        return $this->id;
+    }
+
+    public function getPhoneNumber(): string
+    {
+        return $this->phoneNumber;
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return $this->phoneNumber;
+    }
+
+    public function getRoles(): array
+    {
+        return array_values(array_unique([...$this->roles, 'ROLE_CUSTOMER']));
+    }
+
+    public function setRoles(array $roles): self
+    {
+        $this->roles = $roles;
+
+        return $this;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->active;
+    }
+
+    public function eraseCredentials(): void
+    {
+    }
 }

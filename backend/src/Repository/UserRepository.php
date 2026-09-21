@@ -5,17 +5,19 @@ namespace App\Repository;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
-use Symfony\Bridge\Doctrine\Security\User\UserLoaderInterface;
 
-final class UserRepository extends ServiceEntityRepository implements UserLoaderInterface
+/**
+ * @extends ServiceEntityRepository<User>
+ */
+final class UserRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, User::class);
     }
 
-    public function loadUserByIdentifier(string $identifier): ?User
+    public function findOneByPhoneNumber(string $phoneNumber): ?User
     {
-        return $this->findOneBy(['phoneNumber' => $identifier]);
+        return $this->findOneBy(['phoneNumber' => $phoneNumber]);
     }
 }

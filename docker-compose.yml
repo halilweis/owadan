@@ -31,7 +31,7 @@ services:
       db:
         condition: service_healthy
 
-    command: php -S 0.0.0.0:8000 -t public
+    command: php -S 0.0.0.0:8000 -t public public/index.php
 
   db:
     image: postgres:17-alpine

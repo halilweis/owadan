@@ -5,6 +5,7 @@ backend/vendor/
 backend/var/
 backend/.env.local
 backend/.env.*.local
+backend/config/jwt/*.pem
 mobile/.dart_tool/
 mobile/build/
 mobile/.flutter-plugins
