@@ -3,30 +3,50 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+
     working_dir: /app
+
     volumes:
       - ./backend:/app
+
     environment:
       APP_ENV: dev
       APP_SECRET: change-me-local-only
       DATABASE_URL: "postgresql://owadan:owadan_dev@db:5432/owadan?serverVersion=17&charset=utf8"
       CORS_ALLOW_ORIGIN: '^https?://(localhost|127\\.0\\.0\\.1)(:[0-9]+)?$'
+
+      DEFAULT_URI: 'http://localhost:8000'
+
+      JWT_SECRET_KEY: '%kernel.project_dir%/config/jwt/private.pem'
+      JWT_PUBLIC_KEY: '%kernel.project_dir%/config/jwt/public.pem'
+      JWT_PASSPHRASE: 'owadan-dev-jwt-passphrase'
+      JWT_ACCESS_TTL: '900'
+      JWT_REFRESH_TTL: '2592000'
+      OTP_TTL_SECONDS: '300'
+
     ports:
       - "8000:8000"
+
     depends_on:
       db:
         condition: service_healthy
 
+    command: php -S 0.0.0.0:8000 -t public
+
   db:
     image: postgres:17-alpine
+
     environment:
       POSTGRES_DB: owadan
       POSTGRES_USER: owadan
       POSTGRES_PASSWORD: owadan_dev
+
     ports:
       - "5432:5432"
+
     volumes:
       - owadan_pgdata:/var/lib/postgresql/data
+
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U owadan -d owadan"]
       interval: 5s
