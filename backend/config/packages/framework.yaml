@@ -1,0 +1,9 @@
+framework:
+  secret: '%env(APP_SECRET)%'
+  handle_all_throwables: true
+  serializer:
+    enabled: true
+  validation:
+    email_validation_mode: html5
+  router:
+    utf8: true

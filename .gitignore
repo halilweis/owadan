@@ -1,0 +1,11 @@
+.idea/
+.vscode/
+.DS_Store
+backend/vendor/
+backend/var/
+backend/.env.local
+backend/.env.*.local
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies

@@ -1,0 +1,41 @@
+name: backend
+on:
+  push:
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: owadan_test
+          POSTGRES_USER: owadan
+          POSTGRES_PASSWORD: owadan_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U owadan -d owadan_test"
+          --health-interval=5s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+      - uses: ramsey/composer-install@v3
+        with:
+          working-directory: backend
+      - name: Migrate
+        working-directory: backend
+        env:
+          APP_ENV: test
+          APP_SECRET: test
+          DATABASE_URL: postgresql://owadan:owadan_test@127.0.0.1:5432/owadan_test?serverVersion=17&charset=utf8
+        run: php bin/console doctrine:migrations:migrate --no-interaction
+      - name: Test
+        working-directory: backend
+        env:
+          APP_ENV: test
+          APP_SECRET: test
+          DATABASE_URL: postgresql://owadan:owadan_test@127.0.0.1:5432/owadan_test?serverVersion=17&charset=utf8
+        run: vendor/bin/phpunit
