@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:8000
-@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAwNzU3MDksImV4cCI6MTc5MDA3NjYwOSwicm9sZXMiOlsiUk9MRV9DVVNUT01FUiIsIlJPTEVfUFJPRkVTU0lPTkFMIl0sInVzZXJuYW1lIjoiKzk5MzYxMTIzNDU2In0.suKxkbbHGxfIfRsoTZ2xuulGjY3hSGx5v0Hkudazp2jiNPOnaBSD-SuPlggv2pEFTurNtecwiXDe51bi_Lr-8zxLBpyGt-FgdQi5zObjCKmL-tN0o5Fac4Rrh3nmhCtK35XIxPaBIYd4o3q4eXVZ9OD8dvf6xRCcXe1jzZF05__M86Xowh67GIO0Z1APmDLvKFVpkY9Y6_c8W_yUu2lSwJ0rabe0UeOytSnGX8yZtXQCl5PYLU9ThyAd2HMOjPPJ3pDYk04PwL6oUzGB9X0w0nmOFGqC0RzzOYW-kN85uE3EvltV88iRfnOOuF8sCw3_JhGqy2I-mJqrLHGLyd04dA
+@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAwNzg3MTcsImV4cCI6MTc5MDA3OTYxNywicm9sZXMiOlsiUk9MRV9DVVNUT01FUiIsIlJPTEVfUFJPRkVTU0lPTkFMIl0sInVzZXJuYW1lIjoiKzk5MzYxMTIzNDU2In0.SmKLTibQQ_TDELTVDWlpTdi6Xl2yhQ1NGe55GrEA4a2_pQzPdaGaZtLNmYFd7xzw9PYo5YVaZdhJx8tJ-gEYc1LfIwaA0sLzQjMVQzwdBVxXDyEt8KYXnlUXhltLffqm2MjXHnGz5YnSX-OeyOVCDEnDS7ogyi_qeWfYuuf6A8IhvO0CHihB7LESC6T1ic7Ek42Y8UJVYlMzGe98HaHkTbNwPd9n9OxKINOhSxJfDCn6nqADVuRktM43Qn_ZPCJLYJlQZ1CE6Q6w3AYqwubxB49Kqdvh2JEojI7pJLjCy5xehE2APtYSXnLaBCvt076-eOwgt5P_qlw73bGoPZrMPA
 @adminToken = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAwNzUwNDgsImV4cCI6MTc5MDA3NTk0OCwicm9sZXMiOlsiUk9MRV9DVVNUT01FUiIsIlJPTEVfQURNSU4iXSwidXNlcm5hbWUiOiIrOTkzNjExMTExMTEifQ.UWQzMjHIjnYaYkP-kb1fOt_oYwSj6ADDmCIGft9BjL-KjXkAoodi4DPilwzkVftYJw-YTHvBxk1LeiB7AWQdRHfkGvDlwUvLvQdUqOT4sOz9-L23lvroJOTJZ6c7J-1uo-b9sB7BXUgoE1jl3om5yi8H4Y6w24BEHIDTJ5hc10oosIsho1_tC5C4mAJyQ_faMqA1aaRadbD6N1XjEk_KLWBj3I_wKm1NaVxlmFZKUDpb7WwZNK0pCBg8daQgXfaXIeq1wtuCa6iyq2VxoM98rLaHK5EzAH9_TVRDIqescJ6l5zhooJUWKxdJOZaNw1RcTd4AnMuxvyrJI3NCRurpyA
 ### Get my professional profile
 GET {{baseUrl}}/api/v1/pro/profile
@@ -44,3 +44,70 @@ GET {{baseUrl}}/api/v1/professionals/01a0c7ea-0ab7-7b59-8920-40b39bbc6b87
 
 ### Public: view Ayna Beauty services
 GET {{baseUrl}}/api/v1/professionals/01a0c7ea-0ab7-7b59-8920-40b39bbc6b87/services
+
+### Create portfolio item
+POST {{baseUrl}}/api/v1/pro/portfolio
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "imageUrl": "https://example.com/portfolio/haircut-1.jpg",
+  "serviceId": "01a0c82b-8334-7dc0-94f9-88243750e07e",
+  "title": "Elegant Haircut",
+  "description": "Classic haircut and styling",
+  "featured": true,
+  "active": true
+}
+
+### Set working hours
+PUT {{baseUrl}}/api/v1/pro/working-hours
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "dayOfWeek": 1,
+      "startTime": "09:00",
+      "endTime": "18:00"
+    },
+    {
+      "dayOfWeek": 2,
+      "startTime": "09:00",
+      "endTime": "18:00"
+    },
+    {
+      "dayOfWeek": 3,
+      "startTime": "09:00",
+      "endTime": "18:00"
+    },
+    {
+      "dayOfWeek": 4,
+      "startTime": "09:00",
+      "endTime": "18:00"
+    },
+    {
+      "dayOfWeek": 5,
+      "startTime": "09:00",
+      "endTime": "18:00"
+    }
+  ]
+}
+
+### Create blocked availability exception
+POST {{baseUrl}}/api/v1/pro/availability-exceptions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "startsAt": "2026-09-25T13:00:00+05:00",
+  "endsAt": "2026-09-25T15:00:00+05:00",
+  "type": "BLOCKED",
+  "note": "Personal appointment"
+}
+
+### Public: Ayna Beauty portfolio
+GET {{baseUrl}}/api/v1/professionals/01a0c7ea-0ab7-7b59-8920-40b39bbc6b87/portfolio
+
+### Public: Ayna Beauty availability
+GET {{baseUrl}}/api/v1/professionals/01a0c7ea-0ab7-7b59-8920-40b39bbc6b87/availability
