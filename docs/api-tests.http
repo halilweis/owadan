@@ -1,0 +1,25 @@
+@baseUrl = http://localhost:8000
+@token = PASTE_ACCESS_TOKEN_HERE
+
+### Get my professional profile
+GET {{baseUrl}}/api/v1/pro/profile
+Authorization: Bearer {{token}}
+
+### Create professional service
+POST {{baseUrl}}/api/v1/pro/services
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "categoryId": 1,
+  "name": "Women's Haircut",
+  "description": "Professional haircut and styling",
+  "durationMinutes": 60,
+  "priceType": "FIXED",
+  "price": "150",
+  "active": true
+}
+
+### Submit profile for verification
+POST {{baseUrl}}/api/v1/pro/profile/submit-verification
+Authorization: Bearer {{token}}
