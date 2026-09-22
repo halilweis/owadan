@@ -1,59 +1,90 @@
-# Apply this patch to Owadan
+# Owadan — Professional Profile + Services patch
 
-Copy the patch contents into the root of your existing `D:\owadan` project, preserving folders. Allow replacement of existing files.
+Copy the `backend` folder from this patch into `D:\owadan`, preserving paths and replacing `backend/config/packages/security.yaml`.
 
-Then run from `D:\owadan`:
+## Apply
+
+From `PS D:\owadan>`:
 
 ```powershell
-docker compose exec php composer require lexik/jwt-authentication-bundle:^3.2 --with-all-dependencies
-
-docker compose up -d --build
-
-docker compose exec php php bin/console lexik:jwt:generate-keypair --skip-if-exists
-
 docker compose exec php php bin/console doctrine:migrations:migrate --no-interaction
-
-docker compose exec php php bin/console cache:clear
+docker compose exec php rm -rf var/cache/dev
+docker compose exec php php bin/console doctrine:schema:validate
+docker compose exec php php bin/console debug:router
 ```
 
-## Quick auth test (PowerShell)
+Expected new routes:
 
-Request OTP:
+- `GET /api/v1/professionals`
+- `GET /api/v1/professionals/{id}`
+- `GET /api/v1/professionals/{id}/services`
+- `GET /api/v1/pro/profile`
+- `PUT /api/v1/pro/profile`
+- `POST /api/v1/pro/profile/submit-verification`
+- `POST /api/v1/pro/services`
+- `PUT /api/v1/pro/services/{id}`
+
+## Test authenticated professional onboarding
+
+Use the `$access` JWT from the completed OTP login flow.
 
 ```powershell
-$otp = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8000/api/v1/auth/request-otp" -ContentType "application/json" -Body '{"phoneNumber":"+99361234567"}'
-$otp
+$headers = @{ Authorization = "Bearer $access" }
+
+$profileBody = @{
+  displayName = "Ayna Beauty"
+  bio = "Hair and bridal beauty professional in Ashgabat"
+  experienceYears = 5
+  languages = @("tk", "ru")
+} | ConvertTo-Json
+
+$profile = Invoke-RestMethod -Method Put -Uri "http://127.0.0.1:8000/api/v1/pro/profile" -Headers $headers -ContentType "application/json" -Body $profileBody
+$profile | ConvertTo-Json -Depth 10
 ```
 
-In development, the response includes `developmentCode: 123456`.
-
-Verify OTP and receive tokens:
+Get your profile:
 
 ```powershell
-$login = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8000/api/v1/auth/verify-otp" -ContentType "application/json" -Body '{"phoneNumber":"+99361234567","code":"123456"}'
-$login
-$access = $login.data.tokens.accessToken
-$refresh = $login.data.tokens.refreshToken
+Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:8000/api/v1/pro/profile" -Headers $headers | ConvertTo-Json -Depth 10
 ```
 
-Call authenticated endpoint:
+Get category IDs:
 
 ```powershell
-Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:8000/api/v1/me" -Headers @{ Authorization = "Bearer $access" }
+$categories = Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:8000/api/v1/categories"
+$categories | ConvertTo-Json -Depth 10
 ```
 
-Rotate refresh token:
+Create a service using one category ID:
 
 ```powershell
-$refreshBody = @{ refreshToken = $refresh } | ConvertTo-Json
-$newTokens = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8000/api/v1/auth/refresh" -ContentType "application/json" -Body $refreshBody
-$newTokens
+$serviceBody = @{
+  categoryId = 1
+  name = "Women's haircut"
+  description = "Consultation and haircut"
+  durationMinutes = 60
+  priceType = "FROM"
+  price = "150.00"
+} | ConvertTo-Json
+
+$service = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8000/api/v1/pro/services" -Headers $headers -ContentType "application/json" -Body $serviceBody
+$service | ConvertTo-Json -Depth 10
 ```
 
-## Commit after successful test
+Submit the profile for verification:
+
+```powershell
+Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8000/api/v1/pro/profile/submit-verification" -Headers $headers | ConvertTo-Json -Depth 10
+```
+
+Public listing intentionally shows only `VERIFIED` professionals. Admin approval is the next development block.
+
+## Git
+
+After the tests pass:
 
 ```powershell
 git add .
-git commit -m "feat: add OTP and JWT authentication flow"
+git commit -m "feat: add professional profiles and services"
 git push
 ```
