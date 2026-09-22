@@ -30,7 +30,7 @@ final class ProfessionalProfileRepository extends ServiceEntityRepository
             ->andWhere('p.active = :active')
             ->andWhere('p.verificationStatus = :status')
             ->setParameter('active', true)
-            ->setParameter('status', VerificationStatus::VERIFIED)
+            ->setParameter('status', VerificationStatus::APPROVED)
             ->orderBy('p.displayName', 'ASC')
             ->setMaxResults($limit)
             ->getQuery()

@@ -8,6 +8,6 @@ enum VerificationStatus: string
 {
     case DRAFT = 'DRAFT';
     case PENDING = 'PENDING';
-    case VERIFIED = 'VERIFIED';
+    case APPROVED = 'APPROVED';
     case REJECTED = 'REJECTED';
 }

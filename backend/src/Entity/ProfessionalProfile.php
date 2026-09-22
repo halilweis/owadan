@@ -88,4 +88,15 @@ class ProfessionalProfile
         $this->verificationStatus = VerificationStatus::PENDING;
         $this->updatedAt = new \DateTimeImmutable();
     }
+    public function approve(): void
+    {
+        $this->verificationStatus = VerificationStatus::APPROVED;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    public function reject(): void
+    {
+        $this->verificationStatus = VerificationStatus::REJECTED;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
 }

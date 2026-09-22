@@ -28,7 +28,7 @@ final class ProfessionalController extends AbstractController
     public function show(string $id, ProfessionalProfileRepository $profiles): JsonResponse
     {
         $profile = $profiles->find($id);
-        if (!$profile instanceof ProfessionalProfile || !$profile->isActive() || $profile->getVerificationStatus() !== VerificationStatus::VERIFIED) {
+        if (!$profile instanceof ProfessionalProfile || !$profile->isActive() || $profile->getVerificationStatus() !== VerificationStatus::APPROVED) {
             return $this->json(['error' => ['code' => 'PROFESSIONAL_NOT_FOUND', 'message' => 'Professional not found.']], 404);
         }
 
@@ -42,7 +42,7 @@ final class ProfessionalController extends AbstractController
         ProfessionalServiceRepository $services,
     ): JsonResponse {
         $profile = $profiles->find($id);
-        if (!$profile instanceof ProfessionalProfile || !$profile->isActive() || $profile->getVerificationStatus() !== VerificationStatus::VERIFIED) {
+        if (!$profile instanceof ProfessionalProfile || !$profile->isActive() || $profile->getVerificationStatus() !== VerificationStatus::APPROVED) {
             return $this->json(['error' => ['code' => 'PROFESSIONAL_NOT_FOUND', 'message' => 'Professional not found.']], 404);
         }
 

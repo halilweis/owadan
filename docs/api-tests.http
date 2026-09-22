@@ -1,6 +1,6 @@
 @baseUrl = http://localhost:8000
-@token = PASTE_ACCESS_TOKEN_HERE
-
+@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAwNzU3MDksImV4cCI6MTc5MDA3NjYwOSwicm9sZXMiOlsiUk9MRV9DVVNUT01FUiIsIlJPTEVfUFJPRkVTU0lPTkFMIl0sInVzZXJuYW1lIjoiKzk5MzYxMTIzNDU2In0.suKxkbbHGxfIfRsoTZ2xuulGjY3hSGx5v0Hkudazp2jiNPOnaBSD-SuPlggv2pEFTurNtecwiXDe51bi_Lr-8zxLBpyGt-FgdQi5zObjCKmL-tN0o5Fac4Rrh3nmhCtK35XIxPaBIYd4o3q4eXVZ9OD8dvf6xRCcXe1jzZF05__M86Xowh67GIO0Z1APmDLvKFVpkY9Y6_c8W_yUu2lSwJ0rabe0UeOytSnGX8yZtXQCl5PYLU9ThyAd2HMOjPPJ3pDYk04PwL6oUzGB9X0w0nmOFGqC0RzzOYW-kN85uE3EvltV88iRfnOOuF8sCw3_JhGqy2I-mJqrLHGLyd04dA
+@adminToken = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAwNzUwNDgsImV4cCI6MTc5MDA3NTk0OCwicm9sZXMiOlsiUk9MRV9DVVNUT01FUiIsIlJPTEVfQURNSU4iXSwidXNlcm5hbWUiOiIrOTkzNjExMTExMTEifQ.UWQzMjHIjnYaYkP-kb1fOt_oYwSj6ADDmCIGft9BjL-KjXkAoodi4DPilwzkVftYJw-YTHvBxk1LeiB7AWQdRHfkGvDlwUvLvQdUqOT4sOz9-L23lvroJOTJZ6c7J-1uo-b9sB7BXUgoE1jl3om5yi8H4Y6w24BEHIDTJ5hc10oosIsho1_tC5C4mAJyQ_faMqA1aaRadbD6N1XjEk_KLWBj3I_wKm1NaVxlmFZKUDpb7WwZNK0pCBg8daQgXfaXIeq1wtuCa6iyq2VxoM98rLaHK5EzAH9_TVRDIqescJ6l5zhooJUWKxdJOZaNw1RcTd4AnMuxvyrJI3NCRurpyA
 ### Get my professional profile
 GET {{baseUrl}}/api/v1/pro/profile
 Authorization: Bearer {{token}}
@@ -23,3 +23,24 @@ Content-Type: application/json
 ### Submit profile for verification
 POST {{baseUrl}}/api/v1/pro/profile/submit-verification
 Authorization: Bearer {{token}}
+
+### Get pending professionals
+GET {{baseUrl}}/api/v1/admin/professionals/pending
+Authorization: Bearer {{adminToken}}
+
+### Approve professional
+POST {{baseUrl}}/api/v1/admin/professionals/01a0c7ea-0ab7-7b59-8920-40b39bbc6b87/approve
+Authorization: Bearer {{adminToken}}
+
+### Reject professional
+POST {{baseUrl}}/api/v1/admin/professionals/01a0c7ea-0ab7-7b59-8920-40b39bbc6b87/reject
+Authorization: Bearer {{adminToken}}
+
+### Public: list professionals
+GET {{baseUrl}}/api/v1/professionals
+
+### Public: view Ayna Beauty profile
+GET {{baseUrl}}/api/v1/professionals/01a0c7ea-0ab7-7b59-8920-40b39bbc6b87
+
+### Public: view Ayna Beauty services
+GET {{baseUrl}}/api/v1/professionals/01a0c7ea-0ab7-7b59-8920-40b39bbc6b87/services
