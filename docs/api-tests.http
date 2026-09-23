@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:8000
-@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAxNDEwMzEsImV4cCI6MTc5MDE0MTkzMSwicm9sZXMiOlsiUk9MRV9DVVNUT01FUiIsIlJPTEVfUFJPRkVTU0lPTkFMIl0sInVzZXJuYW1lIjoiKzk5MzYxMTIzNDU2In0.WP6_VjJPBQw2I8AF6FH2nJ5fIv13gF1-DdR0p_E8_yrdPmqlADhTscEI0CLLrCFzA0IocjomXrocAazIeMSm7NDwVqw_tsUW3A_nfZuTRGoHnk8iE473yXbc5NfkDaorDvlzKzbw2zjFmNzmaN__9-30jfKBSfDdXcRR3zLbiNpS8ZkgMXwALgSlmkvTde3a27yZW2zOcmNhqahszMapAQSN38ujCYT9XRJ9u2htHrQx9GdNEpsr9DD5bw_Vdg_MecCoGsBBVGNPZsFnQld6LGfu7CRg-4N6M0pU2EXe9xrc_kAHZZGqT5DoPdnYsjiAC3kBk24XQfIlkho6TSQv2w
+@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAxNDU5NTIsImV4cCI6MTc5MDE0Njg1Miwicm9sZXMiOlsiUk9MRV9DVVNUT01FUiIsIlJPTEVfUFJPRkVTU0lPTkFMIl0sInVzZXJuYW1lIjoiKzk5MzYxMTIzNDU2In0.jkbaxXWYlJHYycYv9Yvbrb4HiR7tOrQm5vwQ06lpb1RsmNQ3YSBSdRTZfNQlrkJsjS9VmH43lGfAmYDWUTBPZ80VVAskxv7f3Qcxjoi_V_q2S0911LvtWw1JMNNAM5S5zZyPvvKvraUHBrO6vaDZNIaWMUFZuEesAoDfAztWukM-1FpWumoTpHaNX_reerEvLy6hY7QXSigbJpP1iFIbkZz5GXTRap1O6Q4IZnGKeto-GtHpjXEgblQDBEYHXwyy5qo0lWpuEX7wz0cVVLL3YRgp8_NPbVEKa1u9AxDRl9dOA3UXM3CyZJer-g_mNe4UszSX9OQ5a_2zJGmIQe-meQ
 @adminToken = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAwNzUwNDgsImV4cCI6MTc5MDA3NTk0OCwicm9sZXMiOlsiUk9MRV9DVVNUT01FUiIsIlJPTEVfQURNSU4iXSwidXNlcm5hbWUiOiIrOTkzNjExMTExMTEifQ.UWQzMjHIjnYaYkP-kb1fOt_oYwSj6ADDmCIGft9BjL-KjXkAoodi4DPilwzkVftYJw-YTHvBxk1LeiB7AWQdRHfkGvDlwUvLvQdUqOT4sOz9-L23lvroJOTJZ6c7J-1uo-b9sB7BXUgoE1jl3om5yi8H4Y6w24BEHIDTJ5hc10oosIsho1_tC5C4mAJyQ_faMqA1aaRadbD6N1XjEk_KLWBj3I_wKm1NaVxlmFZKUDpb7WwZNK0pCBg8daQgXfaXIeq1wtuCa6iyq2VxoM98rLaHK5EzAH9_TVRDIqescJ6l5zhooJUWKxdJOZaNw1RcTd4AnMuxvyrJI3NCRurpyA
 ### Get my professional profile
 GET {{baseUrl}}/api/v1/pro/profile
@@ -127,7 +127,7 @@ Content-Type: application/json
 GET {{baseUrl}}/api/v1/me/bookings
 Authorization: Bearer {{token}}
 
-@bookingId = 01a0c92a-26fe-7f81-80f1-e8c790a7ae0a
+@bookingId = 01a0c930-3e2e-7482-b795-17fd841fc6b2
 
 ### Professional: list bookings
 GET {{baseUrl}}/api/v1/pro/bookings
@@ -190,4 +190,20 @@ Authorization: Bearer {{token}}
 
 ### Remove professional from favorites
 DELETE {{baseUrl}}/api/v1/me/favorites/{{professionalId}}
+Authorization: Bearer {{token}}
+
+### Professional dashboard
+GET {{baseUrl}}/api/v1/pro/dashboard
+Authorization: Bearer {{token}}
+
+### My notifications
+GET {{baseUrl}}/api/v1/me/notifications
+Authorization: Bearer {{token}}
+
+### Notification unread count
+GET {{baseUrl}}/api/v1/me/notifications/unread-count
+Authorization: Bearer {{token}}
+
+### Mark all notifications read
+POST {{baseUrl}}/api/v1/me/notifications/read-all
 Authorization: Bearer {{token}}

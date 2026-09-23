@@ -13,6 +13,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
+use App\Service\NotificationService;
 
 final class ProfessionalBookingController extends AbstractController
 {
@@ -53,6 +54,7 @@ final class ProfessionalBookingController extends AbstractController
         Booking $booking,
         ProfessionalProfileRepository $profiles,
         EntityManagerInterface $entityManager,
+        NotificationService $notifications,
     ): JsonResponse {
         $profile = $this->requireProfessional($profiles);
 
@@ -69,6 +71,17 @@ final class ProfessionalBookingController extends AbstractController
         }
 
         $booking->confirm();
+
+        $notifications->create(
+            $booking->getCustomer(),
+            'BOOKING_CONFIRMED',
+            'Booking confirmed',
+            sprintf('Your booking for %s has been confirmed.', $booking->getServiceName()),
+            [
+                'bookingId' => (string) $booking->getId(),
+                'startsAt' => $booking->getStartsAt()->format(DATE_ATOM),
+            ],
+        );
         $entityManager->flush();
 
         return $this->json([
@@ -83,6 +96,7 @@ final class ProfessionalBookingController extends AbstractController
         Booking $booking,
         ProfessionalProfileRepository $profiles,
         EntityManagerInterface $entityManager,
+        NotificationService $notifications,
     ): JsonResponse {
         $profile = $this->requireProfessional($profiles);
 
@@ -99,6 +113,17 @@ final class ProfessionalBookingController extends AbstractController
         }
 
         $booking->decline();
+
+        $notifications->create(
+            $booking->getCustomer(),
+            'BOOKING_DECLINED',
+            'Booking declined',
+            sprintf('Your booking for %s was declined.', $booking->getServiceName()),
+            [
+                'bookingId' => (string) $booking->getId(),
+            ],
+        );
+
         $entityManager->flush();
 
         return $this->json([
@@ -113,6 +138,7 @@ final class ProfessionalBookingController extends AbstractController
         Booking $booking,
         ProfessionalProfileRepository $profiles,
         EntityManagerInterface $entityManager,
+        NotificationService $notifications,
     ): JsonResponse {
         $profile = $this->requireProfessional($profiles);
 
@@ -132,6 +158,17 @@ final class ProfessionalBookingController extends AbstractController
         }
 
         $booking->cancelByProfessional();
+
+        $notifications->create(
+            $booking->getCustomer(),
+                'BOOKING_CANCELLED',
+                'Booking cancelled',
+                sprintf('Your booking for %s was cancelled by the professional.', $booking->getServiceName()),
+                [
+                    'bookingId' => (string) $booking->getId(),
+                ],
+        );
+
         $entityManager->flush();
 
         return $this->json([
@@ -146,6 +183,7 @@ final class ProfessionalBookingController extends AbstractController
         Booking $booking,
         ProfessionalProfileRepository $profiles,
         EntityManagerInterface $entityManager,
+        NotificationService $notifications,
     ): JsonResponse {
         $profile = $this->requireProfessional($profiles);
 
@@ -162,6 +200,17 @@ final class ProfessionalBookingController extends AbstractController
         }
 
         $booking->complete();
+
+        $notifications->create(
+            $booking->getCustomer(),
+            'BOOKING_COMPLETED',
+            'Booking completed',
+            sprintf('Your appointment for %s is complete. You can now leave a review.', $booking->getServiceName()),
+            [
+                'bookingId' => (string) $booking->getId(),
+            ],
+        );
+
         $entityManager->flush();
 
         return $this->json([
@@ -176,6 +225,7 @@ final class ProfessionalBookingController extends AbstractController
         Booking $booking,
         ProfessionalProfileRepository $profiles,
         EntityManagerInterface $entityManager,
+        NotificationService $notifications,
     ): JsonResponse {
         $profile = $this->requireProfessional($profiles);
 
@@ -192,6 +242,17 @@ final class ProfessionalBookingController extends AbstractController
         }
 
         $booking->markNoShow();
+
+        $notifications->create(
+            $booking->getCustomer(),
+            'BOOKING_NO_SHOW',
+            'Booking marked as no-show',
+            sprintf('Your booking for %s was marked as no-show.', $booking->getServiceName()),
+            [
+                'bookingId' => (string) $booking->getId(),
+            ],
+        );
+
         $entityManager->flush();
 
         return $this->json([

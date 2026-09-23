@@ -17,6 +17,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Doctrine\DBAL\Exception\DriverException;
+use App\Service\NotificationService;
 
 final class BookingController extends AbstractController
 {
@@ -24,6 +25,7 @@ final class BookingController extends AbstractController
     public function create(
         Request $request,
         EntityManagerInterface $entityManager,
+        NotificationService $notifications,
     ): JsonResponse {
         $user = $this->getUser();
 
@@ -123,6 +125,17 @@ final class BookingController extends AbstractController
         );
 
     $entityManager->persist($booking);
+        $notifications->create(
+        $professional->getUser(),
+        'NEW_BOOKING',
+        'New booking request',
+        sprintf('%s requested %s.', $user->getPhoneNumber(), $service->getName()),
+        [
+            'bookingId' => (string) $booking->getId(),
+            'serviceName' => $service->getName(),
+            'startsAt' => $startsAt->format(DATE_ATOM),
+        ],
+    );
 
     try {
         $entityManager->flush();
@@ -198,6 +211,17 @@ final class BookingController extends AbstractController
         }
 
         $booking->cancelByCustomer();
+
+        $notifications->create(
+            $booking->getProfessional()->getUser(),
+            'BOOKING_CANCELLED',
+            'Booking cancelled',
+            sprintf('A customer cancelled the booking for %s.', $booking->getServiceName()),
+            [
+                'bookingId' => (string) $booking->getId(),
+            ],
+        );
+        
         $entityManager->flush();
 
         return $this->json([
