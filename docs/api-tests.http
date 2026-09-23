@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:8000
-@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAwODEzMzksImV4cCI6MTc5MDA4MjIzOSwicm9sZXMiOlsiUk9MRV9DVVNUT01FUiIsIlJPTEVfUFJPRkVTU0lPTkFMIl0sInVzZXJuYW1lIjoiKzk5MzYxMTIzNDU2In0.pEPLsWLnkQ8TOh7zNYDWoavnTC1WBEcY_Gp-X6zuDKpc-gzhvbX3C_l4ZtLbLA-UBl1Gn6-7XEj0N0me5w3tcjpIeV2T7abd7tuOW8qSvxhUAM66ZpwJG_xc2yTz80h47YI6PLCKmaDw2bE2yDsJH-dLsR7gdvDyX5ANLqdnKkUBeZDeFDDABZUQXFCEii7owob8TKIJR3-pIMT8bQ1vj46JOp9rs3o-LsCwwvEjo25MCl2raHkr87GKtev2tx6dyRO-r-2G4u2422X9EiBxxpEz0vvJZdJ6ZSEQEAYivuPdcqPL8DxKjj4SASS2CN5UDPksrfpxAz9slhPUs5SpFA
+@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAxNDEwMzEsImV4cCI6MTc5MDE0MTkzMSwicm9sZXMiOlsiUk9MRV9DVVNUT01FUiIsIlJPTEVfUFJPRkVTU0lPTkFMIl0sInVzZXJuYW1lIjoiKzk5MzYxMTIzNDU2In0.WP6_VjJPBQw2I8AF6FH2nJ5fIv13gF1-DdR0p_E8_yrdPmqlADhTscEI0CLLrCFzA0IocjomXrocAazIeMSm7NDwVqw_tsUW3A_nfZuTRGoHnk8iE473yXbc5NfkDaorDvlzKzbw2zjFmNzmaN__9-30jfKBSfDdXcRR3zLbiNpS8ZkgMXwALgSlmkvTde3a27yZW2zOcmNhqahszMapAQSN38ujCYT9XRJ9u2htHrQx9GdNEpsr9DD5bw_Vdg_MecCoGsBBVGNPZsFnQld6LGfu7CRg-4N6M0pU2EXe9xrc_kAHZZGqT5DoPdnYsjiAC3kBk24XQfIlkho6TSQv2w
 @adminToken = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAwNzUwNDgsImV4cCI6MTc5MDA3NTk0OCwicm9sZXMiOlsiUk9MRV9DVVNUT01FUiIsIlJPTEVfQURNSU4iXSwidXNlcm5hbWUiOiIrOTkzNjExMTExMTEifQ.UWQzMjHIjnYaYkP-kb1fOt_oYwSj6ADDmCIGft9BjL-KjXkAoodi4DPilwzkVftYJw-YTHvBxk1LeiB7AWQdRHfkGvDlwUvLvQdUqOT4sOz9-L23lvroJOTJZ6c7J-1uo-b9sB7BXUgoE1jl3om5yi8H4Y6w24BEHIDTJ5hc10oosIsho1_tC5C4mAJyQ_faMqA1aaRadbD6N1XjEk_KLWBj3I_wKm1NaVxlmFZKUDpb7WwZNK0pCBg8daQgXfaXIeq1wtuCa6iyq2VxoM98rLaHK5EzAH9_TVRDIqescJ6l5zhooJUWKxdJOZaNw1RcTd4AnMuxvyrJI3NCRurpyA
 ### Get my professional profile
 GET {{baseUrl}}/api/v1/pro/profile
@@ -163,3 +163,31 @@ Content-Type: application/json
   "startsAt": "2026-09-29T10:00:00+05:00",
   "note": "Overlap protection test"
 }
+
+@completedBookingId = 01a0c91b-b95e-73b4-bcf5-122d0165ac5f
+@professionalId = 01a0c7ea-0ab7-7b59-8920-40b39bbc6b87
+
+### Create review for completed booking
+POST {{baseUrl}}/api/v1/bookings/{{completedBookingId}}/review
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rating": 5,
+  "comment": "Excellent service and very professional."
+}
+
+### Public: professional reviews
+GET {{baseUrl}}/api/v1/professionals/{{professionalId}}/reviews
+
+### Add professional to favorites
+POST {{baseUrl}}/api/v1/me/favorites/{{professionalId}}
+Authorization: Bearer {{token}}
+
+### My favorites
+GET {{baseUrl}}/api/v1/me/favorites
+Authorization: Bearer {{token}}
+
+### Remove professional from favorites
+DELETE {{baseUrl}}/api/v1/me/favorites/{{professionalId}}
+Authorization: Bearer {{token}}
