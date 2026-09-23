@@ -12,16 +12,43 @@ use App\Repository\ProfessionalServiceRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\HttpFoundation\Request;
 
 final class ProfessionalController extends AbstractController
 {
     #[Route('/api/v1/professionals', methods: ['GET'])]
-    public function index(ProfessionalProfileRepository $profiles): JsonResponse
-    {
-        return $this->json(['data' => array_map(
-            fn (ProfessionalProfile $profile) => $this->profilePayload($profile),
-            $profiles->findPublicProfiles(),
-        )]);
+    public function index(
+        Request $request,
+        ProfessionalProfileRepository $profiles,
+    ): JsonResponse {
+        $page = max(1, $request->query->getInt('page', 1));
+        $size = min(50, max(1, $request->query->getInt('size', 20)));
+
+        $filters = [
+            'category' => $request->query->get('category'),
+            'districtId' => $request->query->get('districtId'),
+            'minPrice' => $request->query->get('minPrice'),
+            'maxPrice' => $request->query->get('maxPrice'),
+            'verified' => $request->query->get('verified'),
+            'sort' => $request->query->get('sort', 'name'),
+            'page' => $page,
+            'size' => $size,
+        ];
+
+        $result = $profiles->searchPublicProfiles($filters);
+
+        return $this->json([
+            'data' => array_map(
+                fn (ProfessionalProfile $profile) => $this->profilePayload($profile),
+                $result['items'],
+            ),
+            'meta' => [
+                'page' => $page,
+                'size' => $size,
+                'total' => $result['total'],
+                'pages' => (int) ceil($result['total'] / $size),
+            ],
+        ]);
     }
 
     #[Route('/api/v1/professionals/{id}', methods: ['GET'])]

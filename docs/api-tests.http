@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:8000
-@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAxNDU5NTIsImV4cCI6MTc5MDE0Njg1Miwicm9sZXMiOlsiUk9MRV9DVVNUT01FUiIsIlJPTEVfUFJPRkVTU0lPTkFMIl0sInVzZXJuYW1lIjoiKzk5MzYxMTIzNDU2In0.jkbaxXWYlJHYycYv9Yvbrb4HiR7tOrQm5vwQ06lpb1RsmNQ3YSBSdRTZfNQlrkJsjS9VmH43lGfAmYDWUTBPZ80VVAskxv7f3Qcxjoi_V_q2S0911LvtWw1JMNNAM5S5zZyPvvKvraUHBrO6vaDZNIaWMUFZuEesAoDfAztWukM-1FpWumoTpHaNX_reerEvLy6hY7QXSigbJpP1iFIbkZz5GXTRap1O6Q4IZnGKeto-GtHpjXEgblQDBEYHXwyy5qo0lWpuEX7wz0cVVLL3YRgp8_NPbVEKa1u9AxDRl9dOA3UXM3CyZJer-g_mNe4UszSX9OQ5a_2zJGmIQe-meQ
+@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAxNjQ0NjAsImV4cCI6MTc5MDE2NTM2MCwicm9sZXMiOlsiUk9MRV9DVVNUT01FUiIsIlJPTEVfUFJPRkVTU0lPTkFMIl0sInVzZXJuYW1lIjoiKzk5MzYxMTIzNDU2In0.hMWNBQVLz_qslCpvcLXCfwGctgF_AjHwMKUqxosObNqLOoTYAG0YJcNRKAi6f0WZQcLBORPQQcyyNdkXRczCvtn8dZC52DqbGunlkdsJ2ypEimfhRUa2_zcb2HwX1_HiamdKw2cE0ijYwR2QKCQQpC-NRo17X6rf1v5tBu7dQhjgQ01b1FsgbUN3h28bVFQo-l-3Um4i_JdT-82PxBjaHeaV3J6eCCATIkdtGRGJFUMOKqjQSZzqSlgjnVpZ-HmyRB5q3DN4LNZsT8eRKyQDGa_mlJPDjYlQjQT7sv9Ogn-WgIOSgpDc4AqbGExRS9_oECZVQfPy1DrqKNuhl30ALQ
 @adminToken = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAwNzUwNDgsImV4cCI6MTc5MDA3NTk0OCwicm9sZXMiOlsiUk9MRV9DVVNUT01FUiIsIlJPTEVfQURNSU4iXSwidXNlcm5hbWUiOiIrOTkzNjExMTExMTEifQ.UWQzMjHIjnYaYkP-kb1fOt_oYwSj6ADDmCIGft9BjL-KjXkAoodi4DPilwzkVftYJw-YTHvBxk1LeiB7AWQdRHfkGvDlwUvLvQdUqOT4sOz9-L23lvroJOTJZ6c7J-1uo-b9sB7BXUgoE1jl3om5yi8H4Y6w24BEHIDTJ5hc10oosIsho1_tC5C4mAJyQ_faMqA1aaRadbD6N1XjEk_KLWBj3I_wKm1NaVxlmFZKUDpb7WwZNK0pCBg8daQgXfaXIeq1wtuCa6iyq2VxoM98rLaHK5EzAH9_TVRDIqescJ6l5zhooJUWKxdJOZaNw1RcTd4AnMuxvyrJI3NCRurpyA
 ### Get my professional profile
 GET {{baseUrl}}/api/v1/pro/profile
@@ -207,3 +207,18 @@ Authorization: Bearer {{token}}
 ### Mark all notifications read
 POST {{baseUrl}}/api/v1/me/notifications/read-all
 Authorization: Bearer {{token}}
+
+### Search: Hair professionals
+GET {{baseUrl}}/api/v1/professionals?category=hair
+
+### Search: Price range
+GET {{baseUrl}}/api/v1/professionals?minPrice=100&maxPrice=300
+
+### Search: Cheapest first
+GET {{baseUrl}}/api/v1/professionals?category=hair&sort=price_asc
+
+### Search: Highest rated first
+GET {{baseUrl}}/api/v1/professionals?sort=rating
+
+### Search: Pagination
+GET {{baseUrl}}/api/v1/professionals?page=1&size=10
