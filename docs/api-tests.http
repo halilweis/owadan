@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:8000
-@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAxNjQ0NjAsImV4cCI6MTc5MDE2NTM2MCwicm9sZXMiOlsiUk9MRV9DVVNUT01FUiIsIlJPTEVfUFJPRkVTU0lPTkFMIl0sInVzZXJuYW1lIjoiKzk5MzYxMTIzNDU2In0.hMWNBQVLz_qslCpvcLXCfwGctgF_AjHwMKUqxosObNqLOoTYAG0YJcNRKAi6f0WZQcLBORPQQcyyNdkXRczCvtn8dZC52DqbGunlkdsJ2ypEimfhRUa2_zcb2HwX1_HiamdKw2cE0ijYwR2QKCQQpC-NRo17X6rf1v5tBu7dQhjgQ01b1FsgbUN3h28bVFQo-l-3Um4i_JdT-82PxBjaHeaV3J6eCCATIkdtGRGJFUMOKqjQSZzqSlgjnVpZ-HmyRB5q3DN4LNZsT8eRKyQDGa_mlJPDjYlQjQT7sv9Ogn-WgIOSgpDc4AqbGExRS9_oECZVQfPy1DrqKNuhl30ALQ
+@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAxNjc2MDEsImV4cCI6MTc5MDE2ODUwMSwicm9sZXMiOlsiUk9MRV9DVVNUT01FUiIsIlJPTEVfUFJPRkVTU0lPTkFMIl0sInVzZXJuYW1lIjoiKzk5MzYxMTIzNDU2In0.fkZAif649KQBuP6e2PybCMpxoio-o9CVT7duj8PE4xV3_FxcmH8MRN6aj-npVrZ-WtrBNsnT2te4Mo-4ZmLjZFOntJH0Mth5T6SN2hTz9j7gPvchtX1h-Krm8QZ2H071NbX3wxRa98muUhN9n-v6FIL5lgGUSw9QO87UK2ocxT1mB9RnZ9XlUpuP5jttZ9Cvd5RK-Mr3WSt0kfELc7fRqC2eeAD6JHzYKzRkfK_KvwJ4kUx7t60vsWsYF_IVxJtr_-cgqnXghmnk3TB2zHCDEZ2GVI13Sk628acPc1w58Pah4u2qgumtAXXWuaQ5Q2cncX_RAEeqZwCTexEvZw4ylQ
 @adminToken = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAwNzUwNDgsImV4cCI6MTc5MDA3NTk0OCwicm9sZXMiOlsiUk9MRV9DVVNUT01FUiIsIlJPTEVfQURNSU4iXSwidXNlcm5hbWUiOiIrOTkzNjExMTExMTEifQ.UWQzMjHIjnYaYkP-kb1fOt_oYwSj6ADDmCIGft9BjL-KjXkAoodi4DPilwzkVftYJw-YTHvBxk1LeiB7AWQdRHfkGvDlwUvLvQdUqOT4sOz9-L23lvroJOTJZ6c7J-1uo-b9sB7BXUgoE1jl3om5yi8H4Y6w24BEHIDTJ5hc10oosIsho1_tC5C4mAJyQ_faMqA1aaRadbD6N1XjEk_KLWBj3I_wKm1NaVxlmFZKUDpb7WwZNK0pCBg8daQgXfaXIeq1wtuCa6iyq2VxoM98rLaHK5EzAH9_TVRDIqescJ6l5zhooJUWKxdJOZaNw1RcTd4AnMuxvyrJI3NCRurpyA
 ### Get my professional profile
 GET {{baseUrl}}/api/v1/pro/profile
@@ -222,3 +222,34 @@ GET {{baseUrl}}/api/v1/professionals?sort=rating
 
 ### Search: Pagination
 GET {{baseUrl}}/api/v1/professionals?page=1&size=10
+
+### Public: bookable slots
+GET {{baseUrl}}/api/v1/professionals/{{professionalId}}/availability?serviceId=01a0c82b-8334-7dc0-94f9-88243750e07e&date=2026-09-30
+
+### Create extra availability
+POST {{baseUrl}}/api/v1/pro/availability-exceptions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "startsAt": "2026-10-03T10:00:00+05:00",
+  "endsAt": "2026-10-03T13:00:00+05:00",
+  "type": "EXTRA",
+  "note": "Special Saturday availability"
+}
+
+### Public: extra availability slots
+GET {{baseUrl}}/api/v1/professionals/{{professionalId}}/availability?serviceId=01a0c82b-8334-7dc0-94f9-88243750e07e&date=2026-10-03
+
+### Book extra availability slot
+POST {{baseUrl}}/api/v1/bookings
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "serviceId": "01a0c82b-8334-7dc0-94f9-88243750e07e",
+  "startsAt": "2026-10-03T11:00:00+00:00",
+  "note": "Extra availability test"
+}
+### Public: Ayna Beauty services
+GET {{baseUrl}}/api/v1/professionals/{{professionalId}}/services

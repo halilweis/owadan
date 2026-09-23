@@ -7,6 +7,7 @@ namespace App\Controller\Api\V1;
 use App\Entity\AvailabilityException;
 use App\Entity\Booking;
 use App\Entity\ProfessionalService;
+use App\Entity\ProfessionalProfile;
 use App\Entity\User;
 use App\Entity\WorkingHours;
 use App\Enum\BookingStatus;
@@ -84,7 +85,7 @@ final class BookingController extends AbstractController
             sprintf('+%d minutes', $service->getDurationMinutes())
         );
 
-        if (!$this->isInsideWorkingHours($professional->getId()->toRfc4122(), $startsAt, $endsAt, $entityManager)) {
+        if (!$this->isInsideAvailableWindow($professional, $startsAt, $endsAt, $entityManager)) {
             return $this->json([
                 'error' => [
                     'code' => 'OUTSIDE_WORKING_HOURS',
@@ -231,8 +232,8 @@ final class BookingController extends AbstractController
         ]);
     }
 
-    private function isInsideWorkingHours(
-        string $professionalId,
+    private function isInsideAvailableWindow(
+        ProfessionalProfile $professional,
         \DateTimeImmutable $startsAt,
         \DateTimeImmutable $endsAt,
         EntityManagerInterface $entityManager,
@@ -241,23 +242,40 @@ final class BookingController extends AbstractController
         $startTime = $startsAt->format('H:i');
         $endTime = $endsAt->format('H:i');
 
-        $count = $entityManager->createQueryBuilder()
+        $workingHoursCount = $entityManager->createQueryBuilder()
             ->select('COUNT(w.id)')
             ->from(WorkingHours::class, 'w')
-            ->join('w.professional', 'p')
-            ->where('p.id = :professionalId')
+            ->where('w.professional = :professional')
             ->andWhere('w.dayOfWeek = :day')
             ->andWhere('w.active = true')
             ->andWhere('w.startTime <= :startTime')
             ->andWhere('w.endTime >= :endTime')
-            ->setParameter('professionalId', $professionalId)
+            ->setParameter('professional', $professional)
             ->setParameter('day', $dayOfWeek)
             ->setParameter('startTime', $startTime)
             ->setParameter('endTime', $endTime)
             ->getQuery()
             ->getSingleScalarResult();
 
-        return (int) $count > 0;
+        if ((int) $workingHoursCount > 0) {
+            return true;
+        }
+
+        $extraCount = $entityManager->createQueryBuilder()
+            ->select('COUNT(a.id)')
+            ->from(AvailabilityException::class, 'a')
+            ->where('a.professional = :professional')
+            ->andWhere('a.type = :type')
+            ->andWhere('a.startsAt <= :startsAt')
+            ->andWhere('a.endsAt >= :endsAt')
+            ->setParameter('professional', $professional)
+            ->setParameter('type', 'EXTRA')
+            ->setParameter('startsAt', $startsAt)
+            ->setParameter('endsAt', $endsAt)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return (int) $extraCount > 0;
     }
 
     private function hasBlockedException(
