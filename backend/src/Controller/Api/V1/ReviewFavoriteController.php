@@ -16,6 +16,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Uid\Uuid;
+use App\Service\NotificationService;
 
 final class ReviewFavoriteController extends AbstractController
 {
@@ -24,6 +25,7 @@ final class ReviewFavoriteController extends AbstractController
         Booking $booking,
         Request $request,
         EntityManagerInterface $entityManager,
+        NotificationService $notifications,
     ): JsonResponse {
         $user = $this->getUser();
 
@@ -78,6 +80,23 @@ final class ReviewFavoriteController extends AbstractController
         );
 
         $entityManager->persist($review);
+
+        $notifications->create(
+            $booking->getProfessional()->getUser(),
+            'REVIEW_RECEIVED',
+            'New review received',
+            sprintf(
+                'You received a %d-star review for %s.',
+                $rating,
+                $booking->getServiceName(),
+            ),
+            [
+                'reviewId' => (string) $review->getId(),
+                'bookingId' => (string) $booking->getId(),
+                'rating' => $rating,
+            ],
+        );
+
         $entityManager->flush();
 
         return $this->json([

@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:8000
-@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAyMjc3NzQsImV4cCI6MTc5MDIyODY3NCwicm9sZXMiOlsiUk9MRV9DVVNUT01FUiIsIlJPTEVfUFJPRkVTU0lPTkFMIl0sInVzZXJuYW1lIjoiKzk5MzYxMTIzNDU2In0.aOwtQY31KlmIG4No662czoOdtKjM7LhCI6_5Y6NMsqCcSSq026PsJAtmv48ZclX_jjUC6UHEBrLoy_pf0kZmOqvPpLvCEKuBqDY81_cb7NOJDAMD2pJZjBuzl2a8FeSNEV23vhL0VFPSrKqkEoZkIPCm4MYghHnO4bIbB2O0md3aANWd_zdDTgNmP0TnnWDiGu2OTi5z-eQsaG02JAZs-k4F-Dhwd9o26y7GZc19h9ZSUEH0ZavcVc3Kl4xhrKjjpAR2a_EcM658HQyKNXdFFsfjYJ_fuwBsy55TeRI9cQIb94LzwrnE6oD4S8ZD2fQUojaTcfRGvHhutme1ehiGWw
+@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAyNDkxODUsImV4cCI6MTc5MDI1MDA4NSwicm9sZXMiOlsiUk9MRV9DVVNUT01FUiIsIlJPTEVfUFJPRkVTU0lPTkFMIl0sInVzZXJuYW1lIjoiKzk5MzYxMTIzNDU2In0.gOYOHV23OgnUrVD-eu17A6p0QjV1655XprjZkxOZOinwmqFOWOkAz7ay8FBqkDVAP_Z4RlzvebiHgciYiJ6ngmZ-eD9TiUicOBY_ZFAWQdpJ0x4IzMy5YLZH6EPwfarxDu2aG9l05ZGp1E4IBfaXhTwEsin0Lx9mgzIojQBXtq7HboVcMJ2whH4BXxeXnxIx2FAybem9CIKQ_ZHwiD7EVErUM2TFn-ZMSw6WEKadrbcd6umJayyVCH2tBZYlAnQrnDo9ugfo9RTs-iXi_vALwyMqthvB2DKvO0sniBcLncCJdfBcfSumnCJulKpdFsn-_xx5lVDwDoQzZWuweTtwjg
 @adminToken = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAwNzUwNDgsImV4cCI6MTc5MDA3NTk0OCwicm9sZXMiOlsiUk9MRV9DVVNUT01FUiIsIlJPTEVfQURNSU4iXSwidXNlcm5hbWUiOiIrOTkzNjExMTExMTEifQ.UWQzMjHIjnYaYkP-kb1fOt_oYwSj6ADDmCIGft9BjL-KjXkAoodi4DPilwzkVftYJw-YTHvBxk1LeiB7AWQdRHfkGvDlwUvLvQdUqOT4sOz9-L23lvroJOTJZ6c7J-1uo-b9sB7BXUgoE1jl3om5yi8H4Y6w24BEHIDTJ5hc10oosIsho1_tC5C4mAJyQ_faMqA1aaRadbD6N1XjEk_KLWBj3I_wKm1NaVxlmFZKUDpb7WwZNK0pCBg8daQgXfaXIeq1wtuCa6iyq2VxoM98rLaHK5EzAH9_TVRDIqescJ6l5zhooJUWKxdJOZaNw1RcTd4AnMuxvyrJI3NCRurpyA
 ### Get my professional profile
 GET {{baseUrl}}/api/v1/pro/profile
@@ -164,7 +164,7 @@ Content-Type: application/json
   "note": "Overlap protection test"
 }
 
-@completedBookingId = 01a0c91b-b95e-73b4-bcf5-122d0165ac5f
+@completedBookingId = 01a0c930-3e2e-7482-b795-17fd841fc6b2
 @professionalId = 01a0c7ea-0ab7-7b59-8920-40b39bbc6b87
 
 ### Create review for completed booking
@@ -277,3 +277,30 @@ GET {{baseUrl}}/api/v1/professionals?availableDate=2026-10-03&page=2&size=1
 
 ### Combined marketplace search
 GET {{baseUrl}}/api/v1/professionals?category=hair&availableDate=2026-10-03&sort=rating&page=1&size=10
+
+### Professional clients
+GET {{baseUrl}}/api/v1/pro/clients
+Authorization: Bearer {{token}}
+
+### Professional client history
+GET {{baseUrl}}/api/v1/pro/clients/01a0c7db-424f-7aac-aa08-d080ca261389
+Authorization: Bearer {{token}}
+
+### Professional: update client note
+PUT {{baseUrl}}/api/v1/pro/clients/01a0c7db-424f-7aac-aa08-d080ca261389/note
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "note": "Prefers morning appointments and natural styling."
+}
+
+### Review notification test
+POST {{baseUrl}}/api/v1/bookings/{{completedBookingId}}/review
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rating": 4,
+  "comment": "Very good service."
+}
