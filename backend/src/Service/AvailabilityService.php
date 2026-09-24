@@ -233,4 +233,24 @@ final class AvailabilityService
 
         return false;
     }
+
+    public function hasAvailabilityOnDate(
+        ProfessionalProfile $profile,
+        \DateTimeImmutable $day,
+    ): bool {
+        $services = $this->entityManager
+            ->getRepository(ProfessionalService::class)
+            ->findBy([
+                'professional' => $profile,
+                'active' => true,
+            ]);
+
+        foreach ($services as $service) {
+            if ($this->getSlots($profile, $service, $day) !== []) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

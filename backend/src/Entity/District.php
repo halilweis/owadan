@@ -13,4 +13,19 @@ class District
     #[ORM\Column(length:120)]
     private string $name;
     public function __construct(City $city, string $name) { $this->city=$city; $this->name=$name; }
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getCity(): City
+    {
+        return $this->city;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
 }

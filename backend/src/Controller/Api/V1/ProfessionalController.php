@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\Request;
 use App\Service\ProfessionalSummaryService;
+use App\Service\AvailabilityService;
 
 final class ProfessionalController extends AbstractController
 {
@@ -22,22 +23,66 @@ final class ProfessionalController extends AbstractController
         Request $request,
         ProfessionalProfileRepository $profiles,
         ProfessionalSummaryService $summaryService,
+        AvailabilityService $availabilityService,
     ): JsonResponse {
         $page = max(1, $request->query->getInt('page', 1));
         $size = min(50, max(1, $request->query->getInt('size', 20)));
 
         $filters = [
             'category' => $request->query->get('category'),
+            'subcategory' => $request->query->get('subcategory'),
+            'cityId' => $request->query->get('cityId'),
             'districtId' => $request->query->get('districtId'),
             'minPrice' => $request->query->get('minPrice'),
             'maxPrice' => $request->query->get('maxPrice'),
             'verified' => $request->query->get('verified'),
+            'availableDate' => $request->query->get('availableDate'),
             'sort' => $request->query->get('sort', 'name'),
             'page' => $page,
-            'size' => $size,
+            'size' => $size
         ];
 
         $result = $profiles->searchPublicProfiles($filters);
+
+        $items = $result['items'];
+        $total = $result['total'];
+
+        $availableDate = trim((string) ($filters['availableDate'] ?? ''));
+
+        if ($availableDate !== '') {
+            $timezone = new \DateTimeZone('Asia/Ashgabat');
+
+            try {
+                $day = new \DateTimeImmutable(
+                    $availableDate . ' 00:00:00',
+                    $timezone,
+                );
+            } catch (\Exception) {
+                return $this->json([
+                    'error' => [
+                        'code' => 'VALIDATION_ERROR',
+                        'message' => 'availableDate must use YYYY-MM-DD format.',
+                    ],
+                ], 422);
+            }
+
+            if ($day->format('Y-m-d') !== $availableDate) {
+                return $this->json([
+                    'error' => [
+                        'code' => 'VALIDATION_ERROR',
+                        'message' => 'availableDate must use YYYY-MM-DD format.',
+                    ],
+                ], 422);
+            }
+
+            $items = array_values(array_filter(
+                $items,
+                static fn (ProfessionalProfile $profile): bool =>
+                    $availabilityService->hasAvailabilityOnDate($profile, $day),
+            ));
+
+            $total = count($items);
+        }
 
         return $this->json([
             'data' => array_map(
@@ -45,13 +90,13 @@ final class ProfessionalController extends AbstractController
                     ...$this->profilePayload($profile),
                     ...$summaryService->getSummary($profile),
                 ],
-                $result['items'],
+                $items,
             ),
             'meta' => [
                 'page' => $page,
                 'size' => $size,
-                'total' => $result['total'],
-                'pages' => (int) ceil($result['total'] / $size),
+                'total' => $total,
+                'pages' => (int) ceil($total / $size),
             ],
         ]);
     }

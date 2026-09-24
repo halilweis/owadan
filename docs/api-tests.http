@@ -259,3 +259,12 @@ GET {{baseUrl}}/api/v1/professionals/{{professionalId}}/services
 
 ### Public availability
 GET {{baseUrl}}/api/v1/professionals/{{professionalId}}/availability?serviceId={{serviceId}}&date=2026-10-03
+
+### Public categories
+GET {{baseUrl}}/api/v1/categories
+
+### Search professionals available on date
+GET {{baseUrl}}/api/v1/professionals?availableDate=2026-10-03
+
+### Hair professionals available on date
+GET {{baseUrl}}/api/v1/professionals?category=hair&availableDate=2026-10-03
