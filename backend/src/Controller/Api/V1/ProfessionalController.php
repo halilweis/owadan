@@ -13,6 +13,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\Request;
+use App\Service\ProfessionalSummaryService;
 
 final class ProfessionalController extends AbstractController
 {
@@ -20,6 +21,7 @@ final class ProfessionalController extends AbstractController
     public function index(
         Request $request,
         ProfessionalProfileRepository $profiles,
+        ProfessionalSummaryService $summaryService,
     ): JsonResponse {
         $page = max(1, $request->query->getInt('page', 1));
         $size = min(50, max(1, $request->query->getInt('size', 20)));
@@ -39,7 +41,10 @@ final class ProfessionalController extends AbstractController
 
         return $this->json([
             'data' => array_map(
-                fn (ProfessionalProfile $profile) => $this->profilePayload($profile),
+                fn (ProfessionalProfile $profile) => [
+                    ...$this->profilePayload($profile),
+                    ...$summaryService->getSummary($profile),
+                ],
                 $result['items'],
             ),
             'meta' => [
@@ -52,14 +57,19 @@ final class ProfessionalController extends AbstractController
     }
 
     #[Route('/api/v1/professionals/{id}', methods: ['GET'])]
-    public function show(string $id, ProfessionalProfileRepository $profiles): JsonResponse
+    public function show(string $id, ProfessionalProfileRepository $profiles, ProfessionalSummaryService $summaryService): JsonResponse
     {
         $profile = $profiles->find($id);
         if (!$profile instanceof ProfessionalProfile || !$profile->isActive() || $profile->getVerificationStatus() !== VerificationStatus::APPROVED) {
             return $this->json(['error' => ['code' => 'PROFESSIONAL_NOT_FOUND', 'message' => 'Professional not found.']], 404);
         }
 
-        return $this->json(['data' => $this->profilePayload($profile)]);
+        return $this->json([
+            'data' => [
+                ...$this->profilePayload($profile),
+                ...$summaryService->getSummary($profile),
+            ],
+        ]);
     }
 
     #[Route('/api/v1/professionals/{id}/services', methods: ['GET'])]
