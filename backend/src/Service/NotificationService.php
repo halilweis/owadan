@@ -7,6 +7,7 @@ namespace App\Service;
 use App\Entity\Notification;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Uid\Uuid;
 
 final class NotificationService
 {
@@ -21,6 +22,7 @@ final class NotificationService
         string $title,
         ?string $message = null,
         array $data = [],
+        ?Uuid $bookingId = null,
     ): Notification {
         $notification = new Notification(
             $user,
@@ -28,6 +30,7 @@ final class NotificationService
             $title,
             $message,
             $data,
+            $bookingId,
         );
 
         $this->entityManager->persist($notification);

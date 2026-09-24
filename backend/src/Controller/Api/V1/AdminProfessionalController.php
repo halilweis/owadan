@@ -9,6 +9,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
+use App\Entity\User;
+use App\Service\AdminAuditService;
 
 #[Route('/api/v1/admin/professionals')]
 final class AdminProfessionalController extends AbstractController
@@ -39,8 +41,23 @@ final class AdminProfessionalController extends AbstractController
     public function approve(
         ProfessionalProfile $profile,
         EntityManagerInterface $entityManager,
+        AdminAuditService $audit,
     ): JsonResponse {
         $profile->approve();
+
+        $admin = $this->getUser();
+
+        if ($admin instanceof User) {
+            $audit->log(
+                $admin,
+                'PROFESSIONAL_APPROVED',
+                'ProfessionalProfile',
+                (string) $profile->getId(),
+                [
+                    'displayName' => $profile->getDisplayName(),
+                ],
+            );
+        }
 
         $entityManager->flush();
 
@@ -58,9 +75,23 @@ final class AdminProfessionalController extends AbstractController
     public function reject(
         ProfessionalProfile $profile,
         EntityManagerInterface $entityManager,
+        AdminAuditService $audit,
     ): JsonResponse {
         $profile->reject();
 
+        $admin = $this->getUser();
+
+        if ($admin instanceof User) {
+            $audit->log(
+                $admin,
+                'PROFESSIONAL_REJECTED',
+                'ProfessionalProfile',
+                (string) $profile->getId(),
+                [
+                    'displayName' => $profile->getDisplayName(),
+                ],
+            );
+        }
         $entityManager->flush();
 
         return $this->json([

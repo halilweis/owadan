@@ -37,12 +37,16 @@ class Notification
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
 
+    #[ORM\Column(type: 'uuid', nullable: true)]
+    private ?Uuid $bookingId = null;
+
     public function __construct(
         User $user,
         string $type,
         string $title,
         ?string $message = null,
         array $data = [],
+        ?Uuid $bookingId = null,
     ) {
         $this->id = Uuid::v7();
         $this->user = $user;
@@ -50,6 +54,7 @@ class Notification
         $this->title = trim($title);
         $this->message = $message !== null && trim($message) !== '' ? trim($message) : null;
         $this->data = $data;
+        $this->bookingId = $bookingId;
         $this->createdAt = new \DateTimeImmutable();
     }
 
@@ -61,9 +66,6 @@ class Notification
     public function getData(): array { return $this->data; }
     public function isRead(): bool { return $this->read; }
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
-
-    public function markRead(): void
-    {
-        $this->read = true;
-    }
+    public function getBookingId(): ?Uuid { return $this->bookingId; }   
+    public function markRead(): void { $this->read = true; }
 }
