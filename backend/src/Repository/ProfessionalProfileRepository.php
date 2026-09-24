@@ -37,7 +37,8 @@ final class ProfessionalProfileRepository extends ServiceEntityRepository
      *     verified?: mixed,
      *     sort?: mixed,
      *     page?: int,
-     *     size?: int
+     *     size?: int,
+     *     paginate?: bool,
      * } $filters
      *
      * @return array{
@@ -185,9 +186,15 @@ final class ProfessionalProfileRepository extends ServiceEntityRepository
                 ->getResult()
         );
 
+     $paginate = (bool) ($filters['paginate'] ?? true);
+
+        if ($paginate) {
+            $qb
+                ->setFirstResult($offset)
+                ->setMaxResults($size);
+        }
+
         $items = $qb
-            ->setFirstResult($offset)
-            ->setMaxResults($size)
             ->getQuery()
             ->getResult();
 

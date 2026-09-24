@@ -28,6 +28,8 @@ final class ProfessionalController extends AbstractController
         $page = max(1, $request->query->getInt('page', 1));
         $size = min(50, max(1, $request->query->getInt('size', 20)));
 
+        $availableDate = trim((string) $request->query->get('availableDate', ''));
+
         $filters = [
             'category' => $request->query->get('category'),
             'subcategory' => $request->query->get('subcategory'),
@@ -36,18 +38,16 @@ final class ProfessionalController extends AbstractController
             'minPrice' => $request->query->get('minPrice'),
             'maxPrice' => $request->query->get('maxPrice'),
             'verified' => $request->query->get('verified'),
-            'availableDate' => $request->query->get('availableDate'),
             'sort' => $request->query->get('sort', 'name'),
             'page' => $page,
-            'size' => $size
+            'size' => $size,
+            'paginate' => $availableDate === '',
         ];
 
         $result = $profiles->searchPublicProfiles($filters);
 
         $items = $result['items'];
         $total = $result['total'];
-
-        $availableDate = trim((string) ($filters['availableDate'] ?? ''));
 
         if ($availableDate !== '') {
             $timezone = new \DateTimeZone('Asia/Ashgabat');
@@ -82,6 +82,14 @@ final class ProfessionalController extends AbstractController
             ));
 
             $total = count($items);
+
+            $offset = ($page - 1) * $size;
+
+            $items = array_slice(
+                $items,
+                $offset,
+                $size,
+            );
         }
 
         return $this->json([
@@ -96,7 +104,9 @@ final class ProfessionalController extends AbstractController
                 'page' => $page,
                 'size' => $size,
                 'total' => $total,
-                'pages' => (int) ceil($total / $size),
+                'pages' => $total > 0
+                    ? (int) ceil($total / $size)
+                    : 0,
             ],
         ]);
     }

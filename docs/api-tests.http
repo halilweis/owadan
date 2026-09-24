@@ -268,3 +268,12 @@ GET {{baseUrl}}/api/v1/professionals?availableDate=2026-10-03
 
 ### Hair professionals available on date
 GET {{baseUrl}}/api/v1/professionals?category=hair&availableDate=2026-10-03
+
+### Available date page 1
+GET {{baseUrl}}/api/v1/professionals?availableDate=2026-10-03&page=1&size=1
+
+### Available date page 2
+GET {{baseUrl}}/api/v1/professionals?availableDate=2026-10-03&page=2&size=1
+
+### Combined marketplace search
+GET {{baseUrl}}/api/v1/professionals?category=hair&availableDate=2026-10-03&sort=rating&page=1&size=10
