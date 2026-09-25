@@ -15,9 +15,84 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\Request;
 use App\Service\ProfessionalSummaryService;
 use App\Service\AvailabilityService;
+use OpenApi\Attributes as OA;
 
 final class ProfessionalController extends AbstractController
 {
+    #[OA\Get(
+        path: '/api/v1/professionals',
+        summary: 'Search public professionals',
+        tags: ['Professionals'],
+        security: [],
+        parameters: [
+            new OA\Parameter(
+                name: 'category',
+                in: 'query',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'subcategory',
+                in: 'query',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'cityId',
+                in: 'query',
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'districtId',
+                in: 'query',
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'minPrice',
+                in: 'query',
+                schema: new OA\Schema(type: 'number')
+            ),
+            new OA\Parameter(
+                name: 'maxPrice',
+                in: 'query',
+                schema: new OA\Schema(type: 'number')
+            ),
+            new OA\Parameter(
+                name: 'availableDate',
+                in: 'query',
+                schema: new OA\Schema(
+                    type: 'string',
+                    format: 'date',
+                    example: '2026-10-03'
+                )
+            ),
+            new OA\Parameter(
+                name: 'sort',
+                in: 'query',
+                schema: new OA\Schema(
+                    type: 'string',
+                    example: 'rating'
+                )
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                schema: new OA\Schema(type: 'integer', minimum: 1)
+            ),
+            new OA\Parameter(
+                name: 'size',
+                in: 'query',
+                schema: new OA\Schema(
+                    type: 'integer',
+                    minimum: 1,
+                    maximum: 50
+                )
+            ),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Professional search results'),
+            new OA\Response(response: 422, description: 'Invalid search parameters'),
+        ],
+    )]
+
     #[Route('/api/v1/professionals', methods: ['GET'])]
     public function index(
         Request $request,
@@ -110,6 +185,25 @@ final class ProfessionalController extends AbstractController
             ],
         ]);
     }
+
+    #[OA\Get(
+        path: '/api/v1/professionals/{id}',
+        summary: 'Get professional profile',
+        tags: ['Professionals'],
+        security: [],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string', format: 'uuid')
+            ),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Professional profile'),
+            new OA\Response(response: 404, description: 'Professional not found'),
+        ],
+    )]
 
     #[Route('/api/v1/professionals/{id}', methods: ['GET'])]
     public function show(string $id, ProfessionalProfileRepository $profiles, ProfessionalSummaryService $summaryService): JsonResponse

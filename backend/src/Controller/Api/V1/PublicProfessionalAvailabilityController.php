@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Uid\Uuid;
+use OpenApi\Attributes as OA;
 
 final class PublicProfessionalAvailabilityController extends AbstractController
 {
@@ -62,6 +63,42 @@ final class PublicProfessionalAvailabilityController extends AbstractController
             ],
         ]);
     }
+
+    #[OA\Get(
+        path: '/api/v1/professionals/{id}/availability',
+        summary: 'Get bookable time slots',
+        tags: ['Availability'],
+        security: [],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string', format: 'uuid')
+            ),
+            new OA\Parameter(
+                name: 'serviceId',
+                in: 'query',
+                required: true,
+                schema: new OA\Schema(type: 'string', format: 'uuid')
+            ),
+            new OA\Parameter(
+                name: 'date',
+                in: 'query',
+                required: true,
+                schema: new OA\Schema(
+                    type: 'string',
+                    format: 'date',
+                    example: '2026-10-03'
+                )
+            ),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Bookable slots'),
+            new OA\Response(response: 404, description: 'Professional not found'),
+            new OA\Response(response: 422, description: 'Invalid service or date'),
+        ],
+    )]
 
     #[Route('/api/v1/professionals/{id}/availability', methods: ['GET'])]
     public function availability(

@@ -19,9 +19,48 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Doctrine\DBAL\Exception\DriverException;
 use App\Service\NotificationService;
+use OpenApi\Attributes as OA;
 
 final class BookingController extends AbstractController
 {
+    #[OA\Post(
+        path: '/api/v1/bookings',
+        summary: 'Create a booking',
+        tags: ['Bookings'],
+        security: [['Bearer' => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['serviceId', 'startsAt'],
+                properties: [
+                    new OA\Property(
+                        property: 'serviceId',
+                        type: 'string',
+                        format: 'uuid'
+                    ),
+                    new OA\Property(
+                        property: 'startsAt',
+                        type: 'string',
+                        format: 'date-time',
+                        example: '2026-10-03T11:00:00+05:00'
+                    ),
+                    new OA\Property(
+                        property: 'note',
+                        type: 'string',
+                        nullable: true,
+                        example: 'First visit'
+                    ),
+                ],
+            ),
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Booking created'),
+            new OA\Response(response: 401, description: 'Authentication required'),
+            new OA\Response(response: 409, description: 'Requested time unavailable'),
+            new OA\Response(response: 422, description: 'Invalid booking data'),
+        ],
+    )]
+
     #[Route('/api/v1/bookings', methods: ['POST'])]
     public function create(
         Request $request,
@@ -188,6 +227,7 @@ final class BookingController extends AbstractController
     public function cancel(
         Booking $booking,
         EntityManagerInterface $entityManager,
+        NotificationService $notifications,
     ): JsonResponse {
         $user = $this->getUser();
 

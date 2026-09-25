@@ -20,6 +20,12 @@ security:
     - { path: ^/api/v1/categories, roles: PUBLIC_ACCESS }
     - { path: ^/api/v1/professionals, roles: PUBLIC_ACCESS }
     - { path: ^/(health|ready), roles: PUBLIC_ACCESS }
+
+    # Professional onboarding must remain available to any authenticated customer.
+    - { path: ^/api/v1/pro/profile$, roles: ROLE_CUSTOMER }
+
+    # Everything else under /pro requires the professional role.
+    - { path: ^/api/v1/pro, roles: ROLE_PROFESSIONAL }
+
     - { path: ^/api/v1/me, roles: ROLE_CUSTOMER }
     - { path: ^/api/v1/admin, roles: ROLE_ADMIN }
-    - { path: ^/api/v1/pro, roles: ROLE_CUSTOMER }
