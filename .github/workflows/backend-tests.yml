@@ -8,7 +8,7 @@ on:
 
 jobs:
   backend-tests:
-    name: PHPUnit + Doctrine + OpenAPI
+    name: PHPUnit + Static Analysis + Doctrine + OpenAPI
     runs-on: ubuntu-latest
 
     services:
@@ -85,6 +85,12 @@ jobs:
 
       - name: Validate Doctrine mapping
         run: php bin/console doctrine:schema:validate --skip-sync
+
+      - name: Warm test cache for PHPStan
+        run: php bin/console cache:warmup --env=test
+
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse --memory-limit=1G
 
       - name: Run PHPUnit
         run: php bin/phpunit

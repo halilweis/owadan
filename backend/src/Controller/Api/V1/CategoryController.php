@@ -40,16 +40,14 @@ final class CategoryController extends AbstractController
                 continue;
             }
 
-            $parentId = $category->getParent()?->getId();
+            $parentId = $category->getParent()->getId();
 
-            if ($parentId !== null) {
-                $children[$parentId][] = [
-                    'id' => $category->getId(),
-                    'slug' => $category->getSlug(),
-                    'nameI18n' => $category->getNameI18n(),
-                    'sortOrder' => $category->getSortOrder(),
-                ];
-            }
+            $children[$parentId][] = [
+                'id' => $category->getId(),
+                'slug' => $category->getSlug(),
+                'nameI18n' => $category->getNameI18n(),
+                'sortOrder' => $category->getSortOrder(),
+            ];
         }
 
         foreach ($children as $parentId => $subcategories) {

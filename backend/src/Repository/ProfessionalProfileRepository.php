@@ -48,9 +48,31 @@ final class ProfessionalProfileRepository extends ServiceEntityRepository
      */
     public function searchPublicProfiles(array $filters): array
     {
-        $page = max(1, (int) ($filters['page'] ?? 1));
-        $size = min(50, max(1, (int) ($filters['size'] ?? 20)));
+        $page = isset($filters['page'])
+            ? max(1, $filters['page'])
+            : 1;
+
+        $size = isset($filters['size'])
+            ? min(50, max(1, $filters['size']))
+            : 20;
+
         $offset = ($page - 1) * $size;
+
+        $minPrice = array_key_exists('minPrice', $filters)
+            ? $filters['minPrice']
+            : null;
+
+        $maxPrice = array_key_exists('maxPrice', $filters)
+            ? $filters['maxPrice']
+            : null;
+
+        $sort = isset($filters['sort'])
+            ? (string) $filters['sort']
+            : 'name';
+
+        $paginate = isset($filters['paginate'])
+            ? $filters['paginate']
+            : true;
 
         $qb = $this->createQueryBuilder('p')
             ->andWhere('p.active = :active')
@@ -75,10 +97,10 @@ final class ProfessionalProfileRepository extends ServiceEntityRepository
         $needsServiceJoin =
             !empty($filters['category'])
             || !empty($filters['subcategory'])
-            || (($filters['minPrice'] ?? null) !== null && ($filters['minPrice'] ?? '') !== '')
-            || (($filters['maxPrice'] ?? null) !== null && ($filters['maxPrice'] ?? '') !== '')
-            || ($filters['sort'] ?? null) === 'price_asc'
-            || ($filters['sort'] ?? null) === 'price_desc';
+            || ($minPrice !== null && $minPrice !== '')
+            || ($maxPrice !== null && $maxPrice !== '')
+            || $sort === 'price_asc'
+            || $sort === 'price_desc';
 
         if ($needsServiceJoin) {
             $qb
@@ -123,21 +145,19 @@ final class ProfessionalProfileRepository extends ServiceEntityRepository
                 );
         }
 
-        if (($filters['minPrice'] ?? null) !== null && ($filters['minPrice'] ?? '') !== '') {
+        if ($minPrice !== null && $minPrice !== '') {
             $qb
                 ->andWhere('s.price IS NOT NULL')
                 ->andWhere('s.price >= :minPrice')
-                ->setParameter('minPrice', (string) $filters['minPrice']);
+                ->setParameter('minPrice', (string) $minPrice);
         }
 
-        if (($filters['maxPrice'] ?? null) !== null && ($filters['maxPrice'] ?? '') !== '') {
+        if ($maxPrice !== null && $maxPrice !== '') {
             $qb
                 ->andWhere('s.price IS NOT NULL')
                 ->andWhere('s.price <= :maxPrice')
-                ->setParameter('maxPrice', (string) $filters['maxPrice']);
+                ->setParameter('maxPrice', (string) $maxPrice);
         }
-
-        $sort = (string) ($filters['sort'] ?? 'name');
 
         switch ($sort) {
             case 'price_asc':
@@ -186,14 +206,13 @@ final class ProfessionalProfileRepository extends ServiceEntityRepository
                 ->getResult()
         );
 
-     $paginate = (bool) ($filters['paginate'] ?? true);
-
         if ($paginate) {
             $qb
                 ->setFirstResult($offset)
                 ->setMaxResults($size);
         }
 
+        /** @var list<ProfessionalProfile> $items */
         $items = $qb
             ->getQuery()
             ->getResult();

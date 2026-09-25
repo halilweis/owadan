@@ -68,7 +68,7 @@ final class ProfessionalManagementController extends AbstractController
         ), static fn (string $value) => $value !== ''));
 
         $district = null;
-        if (isset($payload['districtId']) && $payload['districtId'] !== null) {
+        if (isset($payload['districtId'])) {
             $district = $entityManager->find(District::class, (int) $payload['districtId']);
             if (!$district instanceof District) {
                 return $this->validationError('districtId is invalid.');

@@ -128,8 +128,12 @@ final class BookingOverlapDatabaseTest extends KernelTestCase
         $this->entityManager->persist($second);
         $this->entityManager->flush();
 
-        self::assertNotNull($first->getId());
-        self::assertNotNull($second->getId());
+        self::assertSame(
+            2,
+            $this->entityManager
+                ->getRepository(Booking::class)
+                ->count([])
+        );
     }
 
     public function testCancelledBookingDoesNotBlockSameTime(): void
@@ -171,8 +175,12 @@ final class BookingOverlapDatabaseTest extends KernelTestCase
         $this->entityManager->persist($replacement);
         $this->entityManager->flush();
 
-        self::assertNotNull($cancelled->getId());
-        self::assertNotNull($replacement->getId());
+        self::assertSame(
+            2,
+            $this->entityManager
+                ->getRepository(Booking::class)
+                ->count([])
+        );
     }
 
     private function createFixture(): array
