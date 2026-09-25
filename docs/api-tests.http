@@ -364,3 +364,6 @@ Content-Type: application/json
 {
   "refreshToken": "x4m3UYK90TuSd20KNGjp4Nai7_lzOJRd7aekEDAc5mubkJVr-s6Sn3CXpvRrFygH"
 }
+
+### OpenAPI JSON
+GET {{baseUrl}}/api/doc.json

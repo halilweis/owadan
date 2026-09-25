@@ -1,0 +1,21 @@
+nelmio_api_doc:
+    documentation:
+        info:
+            title: Owadan API
+            description: Owadan beauty discovery and booking platform API.
+            version: 1.0.0
+
+        components:
+            securitySchemes:
+                Bearer:
+                    type: http
+                    scheme: bearer
+                    bearerFormat: JWT
+
+        security:
+            - Bearer: []
+
+    areas:
+        default:
+            path_patterns:
+                - ^/api/v1
