@@ -145,4 +145,28 @@ final class AuthController extends AbstractController
             'roles' => $user->getRoles(),
         ];
     }
+
+    #[Route('/api/v1/auth/logout-all', methods: ['POST'])]
+    public function logoutAll(TokenIssuer $tokens): JsonResponse
+    {
+        $user = $this->getUser();
+
+        if (!$user instanceof User) {
+            return $this->json([
+                'error' => [
+                    'code' => 'UNAUTHENTICATED',
+                    'message' => 'Authentication required.',
+                ],
+            ], 401);
+        }
+
+        $revoked = $tokens->revokeAll($user);
+
+        return $this->json([
+            'data' => [
+                'loggedOutAll' => true,
+                'revokedSessions' => $revoked,
+            ],
+        ]);
+    }
 }

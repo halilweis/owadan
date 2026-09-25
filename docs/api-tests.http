@@ -1,6 +1,10 @@
 @baseUrl = http://localhost:8000
-@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAyNTc3MTUsImV4cCI6MTc5MDI1ODYxNSwicm9sZXMiOlsiUk9MRV9DVVNUT01FUiIsIlJPTEVfUFJPRkVTU0lPTkFMIl0sInVzZXJuYW1lIjoiKzk5MzYxMTIzNDU2In0.OSySw0PWnqe7wyQ-aSdauMkW1GLCrbP7Rprho_5eRR-FLK2BqM_Jq2-MFuhrSRyjOiD2tb7GsAbdspc62__8ro6ZQRYfdOmW4DCLb6hEDHBDwH9tVuEWsEIoWGAgbV6Ioc5t_q8YqRw7TUUBlB9gYXkJ-aqZbU5SFb7OXlkiiC2UhuKI7r_hDO2MIGiyGw94MnR6zrGGXEXyDPq4iq5w4uUvmtkVJ6b5OJEFyuBaG2iFOL6RwHrRT94ET64udKCtLHp302EXaaL1pVgz5GOBOcFZdn5EuqpX8PtI0gZ44NN_t6IptWDkTQQBLnhqjEffkk_a2GKlupYlCOt5Cr78Iw
+@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAzMTU4MzUsImV4cCI6MTc5MDMxNjczNSwicm9sZXMiOlsiUk9MRV9DVVNUT01FUiIsIlJPTEVfUFJPRkVTU0lPTkFMIl0sInVzZXJuYW1lIjoiKzk5MzYxMTIzNDU2In0.KgVuavAlLvyU7EvmoYxJTV2Xz4Qxtcp0KCyKqyqGEPUIBgftygcR5FsNaDdonDEK9UbWIg3Pl-7r_LQuaQvWqFTdOpNRzQYPRV0BO4uKd54QtcXDEfa4CyA9y7jxz7niWC6dQx2acKzxzPRxT27G3hV2F9lFtpvKasEJ5YG5D9pyHcaFoB6JGQTHgIXFlWFLyms-LMfwz3ENfj4LnC8ZZDDrJ-QKH0EuIt-v1KGL6oAusfZPuMLUWpI_I_5NCTXzamF71aipZGUR0PcxGIOIwWz5XhgVXcTfoLz9JlNshe1zmJgEEiCjL_0LxLftZnWz7IT7RXqfeOOm-UE28culEw
 @adminToken = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3OTAyNTg3MzcsImV4cCI6MTc5MDI1OTYzNywicm9sZXMiOlsiUk9MRV9DVVNUT01FUiIsIlJPTEVfQURNSU4iXSwidXNlcm5hbWUiOiIrOTkzNjExMTExMTEifQ.WukOSIMuDuINgRYgGR_sGgzda21YwkSvsK106m9bKg3AM3W0mpg90y7khhEdp2Yzh0Iv_m9bBNfJfB7m3NDk-giqry3-DnqQbZSYOkKYjiwEmjEj64fdd25u-G53m9viOQVMbHR6QD_M6-o2z69-xBf64r_K5Mh3P6GMhW9QdDrel89cHfYbc6ZtAg7pcTmaGuvduoIWOWHvZ5yYrYRbl383_PjE1KCNOWf1TTxydm0nw3Llk-hCeXOhDNxGs7tcEI8L9KrMEFyLWRlLg6VuwCa9VCOiVd_QRKr9oNsFuz27CdrcmKZ7_LAaMyEvOZl1XLrIWEDBey5p1TAmpNvdRQ
+
+@refreshToken = NZpHbBi3bC4teMs2eu-ozwhYaInahd-yTto7xv6tUFKLz8py6XjsTNXoDF_IilIQ
+@oldRefreshToken = RepYSUlVDI73KQa23wAOk4Gmtqoa1MvOFR7LMehocADoOh023n0E0H8brQf6O81n
+
 ### Get my professional profile
 GET {{baseUrl}}/api/v1/pro/profile
 Authorization: Bearer {{token}}
@@ -308,3 +312,55 @@ Content-Type: application/json
 ### Admin audit logs
 GET {{baseUrl}}/api/v1/admin/audit-logs
 Authorization: Bearer {{adminToken}}
+
+### Refresh access token
+POST {{baseUrl}}/api/v1/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{oldRefreshToken}}"
+}
+
+### Old refresh token must fail after rotation
+POST {{baseUrl}}/api/v1/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{oldRefreshToken}}"
+}
+
+### Logout
+POST {{baseUrl}}/api/v1/auth/logout
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### Logged-out refresh token must fail
+POST {{baseUrl}}/api/v1/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### Logout from all devices
+POST {{baseUrl}}/api/v1/auth/logout-all
+Authorization: Bearer {{token}}
+
+### Session 1 must now fail
+POST {{baseUrl}}/api/v1/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "MwMoZevg_MpS4SU9n3hY-u8G3IC55AmNTsPbqCOkoIPDcEjdY8uPJkhOSvBkl3sr"
+}
+
+### Session 2 must now fail
+POST {{baseUrl}}/api/v1/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "x4m3UYK90TuSd20KNGjp4Nai7_lzOJRd7aekEDAc5mubkJVr-s6Sn3CXpvRrFygH"
+}

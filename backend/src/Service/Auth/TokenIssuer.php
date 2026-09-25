@@ -70,4 +70,9 @@ final class TokenIssuer
 
         return true;
     }
+
+    public function revokeAll(User $user): int
+    {
+        return $this->refreshTokens->revokeAllForUser($user);
+    }
 }
