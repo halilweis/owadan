@@ -1,0 +1,88 @@
+name: Backend CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  backend-tests:
+    name: PHPUnit + Doctrine + OpenAPI
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: owadan_test
+          POSTGRES_USER: owadan
+          POSTGRES_PASSWORD: owadan_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U owadan -d owadan_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      APP_ENV: test
+      APP_DEBUG: 1
+      APP_SECRET: owadan-ci-test-secret
+      DATABASE_URL: postgresql://owadan:owadan_test@127.0.0.1:5432/owadan_test?serverVersion=17&charset=utf8
+      JWT_SECRET_KEY: ${{ github.workspace }}/backend/config/jwt/private.pem
+      JWT_PUBLIC_KEY: ${{ github.workspace }}/backend/config/jwt/public.pem
+      JWT_PASSPHRASE: owadan-ci-jwt-passphrase
+      JWT_ACCESS_TTL: 900
+      JWT_REFRESH_TTL: 2592000
+      OTP_TTL_SECONDS: 300
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: ctype, iconv, intl, pdo_pgsql
+          coverage: none
+          tools: composer:v2
+
+      - name: Validate Composer files
+        run: composer validate --no-check-publish
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Generate JWT key pair
+        run: |
+          mkdir -p config/jwt
+          openssl genpkey \
+            -algorithm RSA \
+            -aes-256-cbc \
+            -pass pass:"$JWT_PASSPHRASE" \
+            -out config/jwt/private.pem \
+            -pkeyopt rsa_keygen_bits:4096
+          openssl pkey \
+            -in config/jwt/private.pem \
+            -passin pass:"$JWT_PASSPHRASE" \
+            -pubout \
+            -out config/jwt/public.pem
+
+      - name: Run database migrations
+        run: php bin/console doctrine:migrations:migrate --no-interaction
+
+      - name: Validate Doctrine schema
+        run: php bin/console doctrine:schema:validate
+
+      - name: Run PHPUnit
+        run: php bin/phpunit
+
+      - name: Validate OpenAPI generation
+        run: php bin/console nelmio:apidoc:dump --format=json > /tmp/owadan-openapi.json
