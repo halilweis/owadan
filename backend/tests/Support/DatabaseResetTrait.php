@@ -14,6 +14,7 @@ trait DatabaseResetTrait
             ->getConnection()
             ->executeStatement(
                 'TRUNCATE TABLE
+                    favorite,
                     review,
                     booking,
                     working_hours,
