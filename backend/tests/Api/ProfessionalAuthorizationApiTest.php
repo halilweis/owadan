@@ -10,6 +10,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpFoundation\Response;
 
 final class ProfessionalAuthorizationApiTest extends WebTestCase
 {
@@ -135,5 +136,59 @@ final class ProfessionalAuthorizationApiTest extends WebTestCase
         );
 
         self::assertResponseStatusCodeSame(401);
+    }
+
+    public function testCreatingProfessionalProfileSignalsTokenRefresh(): void
+    {
+        $customer = new User('+99361002004');
+
+        $this->entityManager->persist($customer);
+        $this->entityManager->flush();
+
+        $token = $this->jwt->create($customer);
+
+        $this->client->jsonRequest(
+            'PUT',
+            '/api/v1/pro/profile',
+            [
+                'displayName' => 'New Professional',
+                'bio' => 'Test professional profile',
+                'experienceYears' => 3,
+                'languages' => ['tk', 'ru'],
+            ],
+            [
+                'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+            ],
+        );
+
+        self::assertResponseStatusCodeSame(
+            Response::HTTP_CREATED
+        );
+
+        $data = json_decode(
+            $this->client->getResponse()->getContent() ?: '',
+            true,
+            512,
+            JSON_THROW_ON_ERROR,
+        );
+
+        self::assertTrue(
+            $data['data']['auth']['tokenRefreshRequired'] ?? false
+        );
+
+        $this->entityManager->clear();
+
+        $updatedUser = $this->entityManager
+            ->getRepository(User::class)
+            ->findOneBy([
+                'phoneNumber' => '+99361002004',
+            ]);
+
+        self::assertInstanceOf(User::class, $updatedUser);
+
+        self::assertContains(
+            'ROLE_PROFESSIONAL',
+            $updatedUser->getRoles(),
+        );
     }
 }

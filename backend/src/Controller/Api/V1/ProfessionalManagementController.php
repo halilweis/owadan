@@ -98,7 +98,14 @@ final class ProfessionalManagementController extends AbstractController
 
         $entityManager->flush();
 
-        return $this->json(['data' => ['profile' => $this->profilePayload($profile)]], $created ? 201 : 200);
+        return $this->json([
+            'data' => [
+                'profile' => $this->profilePayload($profile),
+                'auth' => [
+                    'tokenRefreshRequired' => $created,
+                ],
+            ],
+        ], $created ? 201 : 200);
     }
 
     #[Route('/api/v1/pro/profile/submit-verification', methods: ['POST'])]
