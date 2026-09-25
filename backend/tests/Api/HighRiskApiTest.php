@@ -4,24 +4,23 @@ declare(strict_types=1);
 
 namespace App\Tests\Api;
 
-use App\Entity\Booking;
-use App\Entity\Category;
-use App\Entity\ProfessionalProfile;
-use App\Entity\ProfessionalService;
 use App\Entity\Review;
 use App\Entity\User;
-use App\Entity\WorkingHours;
-use App\Enum\PriceType;
 use App\Service\Auth\TokenIssuer;
+use App\Tests\Support\DatabaseResetTrait;
+use App\Tests\Support\FixtureFactory;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 final class HighRiskApiTest extends WebTestCase
 {
+    use DatabaseResetTrait;
+
     private EntityManagerInterface $entityManager;
     private KernelBrowser $client;
+    private FixtureFactory $fixtures;
 
     protected function setUp(): void
     {
@@ -32,19 +31,16 @@ final class HighRiskApiTest extends WebTestCase
         $this->entityManager = static::getContainer()
             ->get(EntityManagerInterface::class);
 
-        $this->entityManager
-            ->getConnection()
-            ->executeStatement(
-                'TRUNCATE TABLE review, booking, working_hours, professional_service, professional_profile, refresh_token, notification, app_user, category RESTART IDENTITY CASCADE'
-            );
+        $this->resetDatabase($this->entityManager);
+
+        $this->fixtures = new FixtureFactory(
+            $this->entityManager,
+        );
     }
 
     public function testRefreshTokenRotationInvalidatesOldToken(): void
     {
-        $user = new User('+99361000001');
-
-        $this->entityManager->persist($user);
-        $this->entityManager->flush();
+        $user = $this->fixtures->createCustomer('+99361000001');
 
         /** @var TokenIssuer $issuer */
         $issuer = static::getContainer()->get(TokenIssuer::class);
@@ -100,10 +96,7 @@ final class HighRiskApiTest extends WebTestCase
 
     public function testLogoutAllRevokesEveryRefreshToken(): void
     {
-        $user = new User('+99361000002');
-
-        $this->entityManager->persist($user);
-        $this->entityManager->flush();
+        $user = $this->fixtures->createCustomer('+99361000002');
 
         /** @var TokenIssuer $issuer */
         $issuer = static::getContainer()->get(TokenIssuer::class);
@@ -151,24 +144,20 @@ final class HighRiskApiTest extends WebTestCase
 
     public function testCustomerCannotReviewAnotherCustomersBooking(): void
     {
-        [
-            $owner,
-            $otherCustomer,
-            $professional,
-            $service,
-            $booking,
-        ] = $this->createCompletedBookingFixture();
+        $fixture = $this->fixtures->createCompletedBookingFixture();
 
         /** @var JWTTokenManagerInterface $jwt */
         $jwt = static::getContainer()->get(
             JWTTokenManagerInterface::class
         );
 
-        $token = $jwt->create($otherCustomer);
+        $token = $jwt->create(
+            $fixture['otherCustomer']
+        );
 
         $this->client->jsonRequest(
             'POST',
-            '/api/v1/bookings/' . $booking->getId() . '/review',
+            '/api/v1/bookings/' . $fixture['booking']->getId() . '/review',
             [
                 'rating' => 5,
                 'comment' => 'Should not be allowed',
@@ -183,30 +172,28 @@ final class HighRiskApiTest extends WebTestCase
         self::assertNull(
             $this->entityManager
                 ->getRepository(Review::class)
-                ->findOneBy(['booking' => $booking])
+                ->findOneBy([
+                    'booking' => $fixture['booking'],
+                ])
         );
     }
 
     public function testDuplicateReviewIsRejected(): void
     {
-        [
-            $customer,
-            $otherCustomer,
-            $professional,
-            $service,
-            $booking,
-        ] = $this->createCompletedBookingFixture();
+        $fixture = $this->fixtures->createCompletedBookingFixture();
 
         /** @var JWTTokenManagerInterface $jwt */
         $jwt = static::getContainer()->get(
             JWTTokenManagerInterface::class
         );
 
-        $token = $jwt->create($customer);
+        $token = $jwt->create(
+            $fixture['customer']
+        );
 
         $this->client->jsonRequest(
             'POST',
-            '/api/v1/bookings/' . $booking->getId() . '/review',
+            '/api/v1/bookings/' . $fixture['booking']->getId() . '/review',
             [
                 'rating' => 5,
                 'comment' => 'Excellent',
@@ -220,7 +207,7 @@ final class HighRiskApiTest extends WebTestCase
 
         $this->client->jsonRequest(
             'POST',
-            '/api/v1/bookings/' . $booking->getId() . '/review',
+            '/api/v1/bookings/' . $fixture['booking']->getId() . '/review',
             [
                 'rating' => 4,
                 'comment' => 'Duplicate',
@@ -248,80 +235,9 @@ final class HighRiskApiTest extends WebTestCase
             1,
             $this->entityManager
                 ->getRepository(Review::class)
-                ->count(['booking' => $booking])
+                ->count([
+                    'booking' => $fixture['booking'],
+                ])
         );
-    }
-
-    private function createCompletedBookingFixture(): array
-    {
-        $customer = new User('+99361000101');
-        $otherCustomer = new User('+99361000102');
-        $professionalUser = new User('+99361000103');
-
-        $profile = new ProfessionalProfile(
-            $professionalUser,
-            'Test Professional',
-        );
-
-        $profile->submitForVerification();
-        $profile->approve();
-
-        $category = new Category(
-            'test-hair',
-            [
-                'tk' => 'Saç',
-                'ru' => 'Волосы',
-                'en' => 'Hair',
-            ],
-        );
-
-        $service = new ProfessionalService(
-            $profile,
-            $category,
-            'Test Haircut',
-            60,
-            PriceType::FIXED,
-            '100.00',
-        );
-
-        $startsAt = new \DateTimeImmutable('+2 days 10:00');
-        $endsAt = $startsAt->modify('+60 minutes');
-
-        $booking = new Booking(
-            $customer,
-            $profile,
-            $service,
-            $startsAt,
-            $endsAt,
-            $service->getName(),
-            $service->getPriceType()->value,
-            $service->getPrice(),
-            $service->getCurrency(),
-        );
-
-        $booking->confirm();
-        $booking->complete();
-
-        foreach ([
-            $customer,
-            $otherCustomer,
-            $professionalUser,
-            $profile,
-            $category,
-            $service,
-            $booking,
-        ] as $entity) {
-            $this->entityManager->persist($entity);
-        }
-
-        $this->entityManager->flush();
-
-        return [
-            $customer,
-            $otherCustomer,
-            $profile,
-            $service,
-            $booking,
-        ];
     }
 }

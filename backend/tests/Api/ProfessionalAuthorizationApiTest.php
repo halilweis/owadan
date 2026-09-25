@@ -6,6 +6,8 @@ namespace App\Tests\Api;
 
 use App\Entity\ProfessionalProfile;
 use App\Entity\User;
+use App\Tests\Support\DatabaseResetTrait;
+use App\Tests\Support\FixtureFactory;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -14,9 +16,12 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class ProfessionalAuthorizationApiTest extends WebTestCase
 {
+    use DatabaseResetTrait;
+
     private KernelBrowser $client;
     private EntityManagerInterface $entityManager;
     private JWTTokenManagerInterface $jwt;
+    private FixtureFactory $fixtures;
 
     protected function setUp(): void
     {
@@ -30,19 +35,17 @@ final class ProfessionalAuthorizationApiTest extends WebTestCase
         $this->jwt = static::getContainer()
             ->get(JWTTokenManagerInterface::class);
 
-        $this->entityManager
-            ->getConnection()
-            ->executeStatement(
-                'TRUNCATE TABLE review, booking, working_hours, availability_exception, professional_client_note, professional_service, professional_profile, refresh_token, notification, admin_audit_log, app_user, category RESTART IDENTITY CASCADE'
-            );
+        $this->resetDatabase($this->entityManager);
+
+        $this->fixtures = new FixtureFactory(
+            $this->entityManager,
+        );
     }
 
     public function testCustomerCanAccessProfessionalProfileOnboarding(): void
     {
-        $customer = new User('+99361002001');
-
-        $this->entityManager->persist($customer);
-        $this->entityManager->flush();
+        $customer = $this->fixtures
+            ->createCustomer('+99361002001');
 
         $token = $this->jwt->create($customer);
 
@@ -63,15 +66,15 @@ final class ProfessionalAuthorizationApiTest extends WebTestCase
             JSON_THROW_ON_ERROR,
         );
 
-        self::assertNull($data['data']['profile'] ?? null);
+        self::assertNull(
+            $data['data']['profile'] ?? null
+        );
     }
 
     public function testOrdinaryCustomerCannotAccessProfessionalOperationalRoutes(): void
     {
-        $customer = new User('+99361002002');
-
-        $this->entityManager->persist($customer);
-        $this->entityManager->flush();
+        $customer = $this->fixtures
+            ->createCustomer('+99361002002');
 
         $token = $this->jwt->create($customer);
 
@@ -140,10 +143,8 @@ final class ProfessionalAuthorizationApiTest extends WebTestCase
 
     public function testCreatingProfessionalProfileSignalsTokenRefresh(): void
     {
-        $customer = new User('+99361002004');
-
-        $this->entityManager->persist($customer);
-        $this->entityManager->flush();
+        $customer = $this->fixtures
+            ->createCustomer('+99361002004');
 
         $token = $this->jwt->create($customer);
 
@@ -184,7 +185,10 @@ final class ProfessionalAuthorizationApiTest extends WebTestCase
                 'phoneNumber' => '+99361002004',
             ]);
 
-        self::assertInstanceOf(User::class, $updatedUser);
+        self::assertInstanceOf(
+            User::class,
+            $updatedUser,
+        );
 
         self::assertContains(
             'ROLE_PROFESSIONAL',

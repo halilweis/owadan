@@ -5,18 +5,18 @@ declare(strict_types=1);
 namespace App\Tests\Api;
 
 use App\Entity\Booking;
-use App\Entity\Category;
-use App\Entity\ProfessionalProfile;
-use App\Entity\ProfessionalService;
-use App\Entity\User;
-use App\Enum\PriceType;
+use App\Tests\Support\DatabaseResetTrait;
+use App\Tests\Support\FixtureFactory;
 use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 final class BookingOverlapDatabaseTest extends KernelTestCase
 {
+    use DatabaseResetTrait;
+
     private EntityManagerInterface $entityManager;
+    private FixtureFactory $fixtures;
 
     protected function setUp(): void
     {
@@ -25,11 +25,11 @@ final class BookingOverlapDatabaseTest extends KernelTestCase
         $this->entityManager = static::getContainer()
             ->get(EntityManagerInterface::class);
 
-        $this->entityManager
-            ->getConnection()
-            ->executeStatement(
-                'TRUNCATE TABLE review, booking, working_hours, availability_exception, professional_service, professional_profile, refresh_token, notification, app_user, category RESTART IDENTITY CASCADE'
-            );
+        $this->resetDatabase($this->entityManager);
+
+        $this->fixtures = new FixtureFactory(
+            $this->entityManager,
+        );
     }
 
     protected function tearDown(): void
@@ -175,64 +175,27 @@ final class BookingOverlapDatabaseTest extends KernelTestCase
         self::assertNotNull($replacement->getId());
     }
 
-    /**
-     * @return array{
-     *     0: User,
-     *     1: User,
-     *     2: ProfessionalProfile,
-     *     3: ProfessionalService
-     * }
-     */
     private function createFixture(): array
     {
-        $customerOne = new User('+99361001001');
-        $customerTwo = new User('+99361001002');
-        $professionalUser = new User('+99361001003');
+        $customerOne = $this->fixtures
+            ->createCustomer('+99361001001');
 
-        $profile = new ProfessionalProfile(
-            $professionalUser,
-            'Overlap Test Professional',
-        );
+        $customerTwo = $this->fixtures
+            ->createCustomer('+99361001002');
 
-        $profile->submitForVerification();
-        $profile->approve();
-
-        $category = new Category(
-            'overlap-test',
-            [
-                'tk' => 'Synag',
-                'ru' => 'Тест',
-                'en' => 'Test',
-            ],
-        );
-
-        $service = new ProfessionalService(
-            $profile,
-            $category,
-            'Overlap Test Service',
-            60,
-            PriceType::FIXED,
-            '100.00',
-        );
-
-        foreach ([
-            $customerOne,
-            $customerTwo,
-            $professionalUser,
-            $profile,
-            $category,
-            $service,
-        ] as $entity) {
-            $this->entityManager->persist($entity);
-        }
-
-        $this->entityManager->flush();
+        $professional = $this->fixtures
+            ->createProfessionalServiceFixture(
+                phoneNumber: '+99361001003',
+                displayName: 'Overlap Test Professional',
+                categorySlug: 'overlap-test',
+                serviceName: 'Overlap Test Service',
+            );
 
         return [
             $customerOne,
             $customerTwo,
-            $profile,
-            $service,
+            $professional['profile'],
+            $professional['service'],
         ];
     }
 }
