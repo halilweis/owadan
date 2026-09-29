@@ -8,6 +8,7 @@ import '../discovery/models/professional_summary.dart';
 import '../discovery/professional_list_screen.dart';
 import '../discovery/widgets/category_chip_card.dart';
 import '../discovery/widgets/professional_card.dart';
+import '../discovery/professional_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -259,15 +260,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.only(bottom: 12),
                   child: ProfessionalCard(
                     professional: professional,
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            '${professional.displayName}: professional detail is next.',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => ProfessionalDetailScreen(
+                              repository: widget.discoveryRepository,
+                              professionalId: professional.id,
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
                   ),
                 ),
               ),
