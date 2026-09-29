@@ -5,34 +5,59 @@ import 'core/storage/token_storage.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/auth_repository.dart';
 import 'features/auth/otp_login_screen.dart';
+import 'features/discovery/discovery_repository.dart';
 import 'features/home/home_screen.dart';
 
 class OwadanApp extends StatefulWidget {
   const OwadanApp({super.key});
+
   @override
   State<OwadanApp> createState() => _OwadanAppState();
 }
 
 class _OwadanAppState extends State<OwadanApp> {
-  late final TokenStorage _storage;
-  late final AuthRepository _auth;
+  late final TokenStorage _tokenStorage;
+  late final ApiClient _apiClient;
+  late final AuthRepository _authRepository;
+  late final DiscoveryRepository _discoveryRepository;
+
   bool _loading = true;
   bool _authenticated = false;
 
   @override
   void initState() {
     super.initState();
-    _storage = const TokenStorage();
-    _auth = AuthRepository(ApiClient(_storage), _storage);
-    _restore();
+
+    _tokenStorage = const TokenStorage();
+    _apiClient = ApiClient(_tokenStorage);
+    _authRepository = AuthRepository(_apiClient, _tokenStorage);
+    _discoveryRepository = DiscoveryRepository(_apiClient);
+
+    _restoreSession();
   }
 
-  Future<void> _restore() async {
-    final token = await _storage.readRefreshToken();
-    if (!mounted) return;
+  Future<void> _restoreSession() async {
+    final refreshToken = await _tokenStorage.readRefreshToken();
+
+    if (!mounted) {
+      return;
+    }
+
     setState(() {
-      _authenticated = token != null && token.isNotEmpty;
+      _authenticated = refreshToken != null && refreshToken.isNotEmpty;
       _loading = false;
+    });
+  }
+
+  void _signedIn() {
+    setState(() {
+      _authenticated = true;
+    });
+  }
+
+  void _signedOut() {
+    setState(() {
+      _authenticated = false;
     });
   }
 
@@ -46,12 +71,13 @@ class _OwadanAppState extends State<OwadanApp> {
           ? const Scaffold(body: Center(child: CircularProgressIndicator()))
           : _authenticated
           ? HomeScreen(
-              authRepository: _auth,
-              onSignedOut: () => setState(() => _authenticated = false),
+              authRepository: _authRepository,
+              discoveryRepository: _discoveryRepository,
+              onSignedOut: _signedOut,
             )
           : OtpLoginScreen(
-              authRepository: _auth,
-              onSignedIn: () => setState(() => _authenticated = true),
+              authRepository: _authRepository,
+              onSignedIn: _signedIn,
             ),
     );
   }
