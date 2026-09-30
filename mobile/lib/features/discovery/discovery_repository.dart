@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 
 import '../../core/network/api_client.dart';
+import '../../core/network/api_exception.dart';
+import '../favorites/models/favorite_item.dart';
 import 'models/category_model.dart';
 import 'models/professional_review.dart';
 import 'models/professional_service.dart';
@@ -46,8 +48,10 @@ class DiscoveryRepository {
       final response = await _apiClient.dio.get<Map<String, dynamic>>(
         '/api/v1/categories',
       );
+
       final raw = response.data?['data'];
       if (raw is! List) return const [];
+
       return raw
           .whereType<Map<String, dynamic>>()
           .map(CategoryModel.fromJson)
@@ -64,6 +68,7 @@ class DiscoveryRepository {
   }) async {
     try {
       final query = <String, dynamic>{'page': page, 'size': size};
+
       if (categorySlug != null && categorySlug.isNotEmpty) {
         query['category'] = categorySlug;
       }
@@ -105,10 +110,12 @@ class DiscoveryRepository {
       final response = await _apiClient.dio.get<Map<String, dynamic>>(
         '/api/v1/professionals/$id',
       );
+
       final data = response.data?['data'];
       if (data is! Map<String, dynamic>) {
         throw StateError('Invalid professional response.');
       }
+
       return ProfessionalSummary.fromJson(data);
     } on DioException catch (error) {
       throw ApiClient.mapError(error);
@@ -120,8 +127,10 @@ class DiscoveryRepository {
       final response = await _apiClient.dio.get<Map<String, dynamic>>(
         '/api/v1/professionals/$id/services',
       );
+
       final data = response.data?['data'];
       if (data is! List) return const [];
+
       return data
           .whereType<Map<String, dynamic>>()
           .map(ProfessionalService.fromJson)
@@ -136,10 +145,13 @@ class DiscoveryRepository {
       final response = await _apiClient.dio.get<Map<String, dynamic>>(
         '/api/v1/professionals/$id/reviews',
       );
+
       final data = response.data?['data'];
       if (data is! Map<String, dynamic>) return const [];
+
       final reviews = data['reviews'];
       if (reviews is! List) return const [];
+
       return reviews
           .whereType<Map<String, dynamic>>()
           .map(ProfessionalReview.fromJson)
@@ -149,21 +161,36 @@ class DiscoveryRepository {
     }
   }
 
-  Future<bool> isFavorite(String professionalId) async {
+  Future<List<FavoriteItem>> fetchFavorites() async {
     try {
       final response = await _apiClient.dio.get<Map<String, dynamic>>(
         '/api/v1/me/favorites',
       );
+
       final data = response.data?['data'];
-      if (data is! Map<String, dynamic>) return false;
+      if (data is! Map<String, dynamic>) return const [];
+
       final favorites = data['favorites'];
-      if (favorites is! List) return false;
-      return favorites.whereType<Map<String, dynamic>>().any(
-        (favorite) => favorite['professionalId']?.toString() == professionalId,
-      );
+      if (favorites is! List) return const [];
+
+      return favorites
+          .whereType<Map<String, dynamic>>()
+          .map(FavoriteItem.fromJson)
+          .toList();
     } on DioException catch (error) {
-      if (error.response?.statusCode == 401) return false;
       throw ApiClient.mapError(error);
+    }
+  }
+
+  Future<bool> isFavorite(String professionalId) async {
+    try {
+      final favorites = await fetchFavorites();
+      return favorites.any(
+        (favorite) => favorite.professionalId == professionalId,
+      );
+    } on ApiException catch (error) {
+      if (error.statusCode == 401) return false;
+      rethrow;
     }
   }
 

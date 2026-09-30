@@ -11,6 +11,7 @@ import '../discovery/professional_list_screen.dart';
 import '../discovery/widgets/category_chip_card.dart';
 import '../discovery/widgets/professional_card.dart';
 import '../booking/bookings_screen.dart';
+import '../favorites/favorites_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -89,17 +90,17 @@ class _HomeScreenState extends State<HomeScreen> {
       body: switch (_selectedIndex) {
         0 => _buildHome(),
         1 => ProfessionalListScreen(
-            repository: widget.discoveryRepository,
-            bookingRepository: widget.bookingRepository,
-          ),
+          repository: widget.discoveryRepository,
+          bookingRepository: widget.bookingRepository,
+        ),
         2 => BookingsScreen(
-            bookingRepository: widget.bookingRepository,
-            discoveryRepository: widget.discoveryRepository,
-          ),
-        3 => const _ComingSoonPage(
-            title: 'Favorites',
-            icon: Icons.favorite_border,
-          ),
+          bookingRepository: widget.bookingRepository,
+          discoveryRepository: widget.discoveryRepository,
+        ),
+        3 => FavoritesScreen(
+          discoveryRepository: widget.discoveryRepository,
+          bookingRepository: widget.bookingRepository,
+        ),
         _ => _ProfilePage(onLogout: _logout),
       },
       bottomNavigationBar: NavigationBar(
@@ -350,31 +351,6 @@ class _EmptyCard extends StatelessWidget {
             Icon(icon),
             const SizedBox(width: 12),
             Expanded(child: Text(message)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ComingSoonPage extends StatelessWidget {
-  const _ComingSoonPage({required this.title, required this.icon});
-
-  final String title;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 56),
-            const SizedBox(height: 16),
-            Text(title, style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 8),
-            const Text('Coming in the next mobile step.'),
           ],
         ),
       ),
