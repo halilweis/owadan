@@ -74,4 +74,47 @@ class BookingRepository {
       throw ApiClient.mapError(error);
     }
   }
+
+  Future<List<BookingModel>> fetchMyBookings() async {
+    try {
+      final response = await _apiClient.dio.get<Map<String, dynamic>>(
+        '/api/v1/me/bookings',
+      );
+
+      final data = response.data?['data'];
+      if (data is! Map<String, dynamic>) return const [];
+
+      final rawBookings = data['bookings'];
+      if (rawBookings is! List) return const [];
+
+      return rawBookings
+          .whereType<Map<String, dynamic>>()
+          .map(BookingModel.fromJson)
+          .toList();
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
+
+  Future<BookingModel> cancelBooking(String bookingId) async {
+    try {
+      final response = await _apiClient.dio.post<Map<String, dynamic>>(
+        '/api/v1/bookings/$bookingId/cancel',
+      );
+
+      final data = response.data?['data'];
+      if (data is! Map<String, dynamic>) {
+        throw StateError('Invalid booking response.');
+      }
+
+      final booking = data['booking'];
+      if (booking is! Map<String, dynamic>) {
+        throw StateError('Invalid booking response.');
+      }
+
+      return BookingModel.fromJson(booking);
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
 }

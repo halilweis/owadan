@@ -10,6 +10,7 @@ import '../discovery/professional_detail_screen.dart';
 import '../discovery/professional_list_screen.dart';
 import '../discovery/widgets/category_chip_card.dart';
 import '../discovery/widgets/professional_card.dart';
+import '../booking/bookings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -85,25 +86,22 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: [
-          _buildHome(),
-          ProfessionalListScreen(
+      body: switch (_selectedIndex) {
+        0 => _buildHome(),
+        1 => ProfessionalListScreen(
             repository: widget.discoveryRepository,
             bookingRepository: widget.bookingRepository,
           ),
-          const _ComingSoonPage(
-            title: 'Bookings',
-            icon: Icons.calendar_month_outlined,
+        2 => BookingsScreen(
+            bookingRepository: widget.bookingRepository,
+            discoveryRepository: widget.discoveryRepository,
           ),
-          const _ComingSoonPage(
+        3 => const _ComingSoonPage(
             title: 'Favorites',
             icon: Icons.favorite_border,
           ),
-          _ProfilePage(onLogout: _logout),
-        ],
-      ),
+        _ => _ProfilePage(onLogout: _logout),
+      },
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {
