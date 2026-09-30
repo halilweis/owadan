@@ -86,4 +86,22 @@ class AuthRepository {
 
     await _tokenStorage.clear();
   }
+
+  Future<int> logoutAll() async {
+    try {
+      final response = await _apiClient.dio.post<Map<String, dynamic>>(
+        '/api/v1/auth/logout-all',
+      );
+
+      final data = response.data?['data'];
+      final revoked = data is Map<String, dynamic>
+          ? data['revokedSessions'] as int? ?? 0
+          : 0;
+
+      await _tokenStorage.clear();
+      return revoked;
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
 }

@@ -8,6 +8,7 @@ import 'features/auth/otp_login_screen.dart';
 import 'features/booking/booking_repository.dart';
 import 'features/discovery/discovery_repository.dart';
 import 'features/home/home_screen.dart';
+import 'features/profile/profile_repository.dart';
 
 class OwadanApp extends StatefulWidget {
   const OwadanApp({super.key});
@@ -22,6 +23,7 @@ class _OwadanAppState extends State<OwadanApp> {
   late final AuthRepository _authRepository;
   late final DiscoveryRepository _discoveryRepository;
   late final BookingRepository _bookingRepository;
+  late final ProfileRepository _profileRepository;
 
   bool _loading = true;
   bool _authenticated = false;
@@ -35,6 +37,7 @@ class _OwadanAppState extends State<OwadanApp> {
     _authRepository = AuthRepository(_apiClient, _tokenStorage);
     _discoveryRepository = DiscoveryRepository(_apiClient);
     _bookingRepository = BookingRepository(_apiClient);
+    _profileRepository = ProfileRepository(_apiClient);
 
     _restoreSession();
   }
@@ -80,6 +83,7 @@ class _OwadanAppState extends State<OwadanApp> {
               authRepository: _authRepository,
               discoveryRepository: _discoveryRepository,
               bookingRepository: _bookingRepository,
+              profileRepository: _profileRepository,
               onSignedOut: _signedOut,
             )
           : OtpLoginScreen(

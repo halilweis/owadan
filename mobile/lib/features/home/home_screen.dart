@@ -12,12 +12,15 @@ import '../discovery/widgets/category_chip_card.dart';
 import '../discovery/widgets/professional_card.dart';
 import '../booking/bookings_screen.dart';
 import '../favorites/favorites_screen.dart';
+import '../profile/profile_repository.dart';
+import '../profile/profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     required this.authRepository,
     required this.discoveryRepository,
     required this.bookingRepository,
+    required this.profileRepository,
     required this.onSignedOut,
     super.key,
   });
@@ -26,6 +29,7 @@ class HomeScreen extends StatefulWidget {
   final DiscoveryRepository discoveryRepository;
   final BookingRepository bookingRepository;
   final VoidCallback onSignedOut;
+  final ProfileRepository profileRepository;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -79,11 +83,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _logout() async {
-    await widget.authRepository.logout();
-    widget.onSignedOut();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -101,7 +100,11 @@ class _HomeScreenState extends State<HomeScreen> {
           discoveryRepository: widget.discoveryRepository,
           bookingRepository: widget.bookingRepository,
         ),
-        _ => _ProfilePage(onLogout: _logout),
+        _ => ProfileScreen(
+          profileRepository: widget.profileRepository,
+          authRepository: widget.authRepository,
+          onSignedOut: widget.onSignedOut,
+        ),
       },
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
@@ -351,37 +354,6 @@ class _EmptyCard extends StatelessWidget {
             Icon(icon),
             const SizedBox(width: 12),
             Expanded(child: Text(message)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ProfilePage extends StatelessWidget {
-  const _ProfilePage({required this.onLogout});
-
-  final Future<void> Function() onLogout;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Profile',
-              style: Theme.of(context).textTheme.headlineMedium
-                  ?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 24),
-            OutlinedButton.icon(
-              onPressed: onLogout,
-              icon: const Icon(Icons.logout),
-              label: const Text('Sign out'),
-            ),
           ],
         ),
       ),
