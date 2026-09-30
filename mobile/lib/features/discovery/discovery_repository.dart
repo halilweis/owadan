@@ -48,7 +48,10 @@ class DiscoveryRepository {
       );
       final raw = response.data?['data'];
       if (raw is! List) return const [];
-      return raw.whereType<Map<String, dynamic>>().map(CategoryModel.fromJson).toList();
+      return raw
+          .whereType<Map<String, dynamic>>()
+          .map(CategoryModel.fromJson)
+          .toList();
     } on DioException catch (error) {
       throw ApiClient.mapError(error);
     }
@@ -75,7 +78,10 @@ class DiscoveryRepository {
       final rawMeta = body['meta'];
 
       final items = rawItems is List
-          ? rawItems.whereType<Map<String, dynamic>>().map(ProfessionalSummary.fromJson).toList()
+          ? rawItems
+                .whereType<Map<String, dynamic>>()
+                .map(ProfessionalSummary.fromJson)
+                .toList()
           : <ProfessionalSummary>[];
 
       final meta = rawMeta is Map<String, dynamic>
@@ -116,7 +122,10 @@ class DiscoveryRepository {
       );
       final data = response.data?['data'];
       if (data is! List) return const [];
-      return data.whereType<Map<String, dynamic>>().map(ProfessionalService.fromJson).toList();
+      return data
+          .whereType<Map<String, dynamic>>()
+          .map(ProfessionalService.fromJson)
+          .toList();
     } on DioException catch (error) {
       throw ApiClient.mapError(error);
     }
@@ -131,7 +140,10 @@ class DiscoveryRepository {
       if (data is! Map<String, dynamic>) return const [];
       final reviews = data['reviews'];
       if (reviews is! List) return const [];
-      return reviews.whereType<Map<String, dynamic>>().map(ProfessionalReview.fromJson).toList();
+      return reviews
+          .whereType<Map<String, dynamic>>()
+          .map(ProfessionalReview.fromJson)
+          .toList();
     } on DioException catch (error) {
       throw ApiClient.mapError(error);
     }
@@ -171,7 +183,9 @@ class DiscoveryRepository {
     }
   }
 
-  Future<ProfessionalDetailBundle> fetchProfessionalDetailBundle(String id) async {
+  Future<ProfessionalDetailBundle> fetchProfessionalDetailBundle(
+    String id,
+  ) async {
     final professional = await fetchProfessional(id);
     final services = await fetchProfessionalServices(id);
     final reviews = await fetchProfessionalReviews(id);

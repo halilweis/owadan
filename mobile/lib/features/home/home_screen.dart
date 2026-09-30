@@ -2,24 +2,27 @@ import 'package:flutter/material.dart';
 
 import '../../core/network/api_exception.dart';
 import '../auth/auth_repository.dart';
+import '../booking/booking_repository.dart';
 import '../discovery/discovery_repository.dart';
 import '../discovery/models/category_model.dart';
 import '../discovery/models/professional_summary.dart';
+import '../discovery/professional_detail_screen.dart';
 import '../discovery/professional_list_screen.dart';
 import '../discovery/widgets/category_chip_card.dart';
 import '../discovery/widgets/professional_card.dart';
-import '../discovery/professional_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     required this.authRepository,
     required this.discoveryRepository,
+    required this.bookingRepository,
     required this.onSignedOut,
     super.key,
   });
 
   final AuthRepository authRepository;
   final DiscoveryRepository discoveryRepository;
+  final BookingRepository bookingRepository;
   final VoidCallback onSignedOut;
 
   @override
@@ -86,7 +89,10 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _selectedIndex,
         children: [
           _buildHome(),
-          ProfessionalListScreen(repository: widget.discoveryRepository),
+          ProfessionalListScreen(
+            repository: widget.discoveryRepository,
+            bookingRepository: widget.bookingRepository,
+          ),
           const _ComingSoonPage(
             title: 'Bookings',
             icon: Icons.calendar_month_outlined,
@@ -194,6 +200,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   MaterialPageRoute<void>(
                     builder: (_) => ProfessionalListScreen(
                       repository: widget.discoveryRepository,
+                      bookingRepository: widget.bookingRepository,
                     ),
                   ),
                 );
@@ -229,6 +236,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           MaterialPageRoute<void>(
                             builder: (_) => ProfessionalListScreen(
                               repository: widget.discoveryRepository,
+                              bookingRepository: widget.bookingRepository,
                               category: category,
                             ),
                           ),
@@ -260,16 +268,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.only(bottom: 12),
                   child: ProfessionalCard(
                     professional: professional,
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => ProfessionalDetailScreen(
-                              repository: widget.discoveryRepository,
-                              professionalId: professional.id,
-                            ),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => ProfessionalDetailScreen(
+                            repository: widget.discoveryRepository,
+                            bookingRepository: widget.bookingRepository,
+                            professionalId: professional.id,
                           ),
-                        );
-                      },
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),

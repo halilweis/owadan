@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_exception.dart';
+import '../booking/booking_repository.dart';
+import '../booking/booking_screen.dart';
 import 'discovery_repository.dart';
 import 'models/professional_review.dart';
 import 'models/professional_service.dart';
@@ -9,15 +11,18 @@ import 'models/professional_summary.dart';
 class ProfessionalDetailScreen extends StatefulWidget {
   const ProfessionalDetailScreen({
     required this.repository,
+    required this.bookingRepository,
     required this.professionalId,
     super.key,
   });
 
   final DiscoveryRepository repository;
+  final BookingRepository bookingRepository;
   final String professionalId;
 
   @override
-  State<ProfessionalDetailScreen> createState() => _ProfessionalDetailScreenState();
+  State<ProfessionalDetailScreen> createState() =>
+      _ProfessionalDetailScreenState();
 }
 
 class _ProfessionalDetailScreenState extends State<ProfessionalDetailScreen> {
@@ -88,15 +93,36 @@ class _ProfessionalDetailScreenState extends State<ProfessionalDetailScreen> {
       });
     } on ApiException catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.message)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error.message)));
     } finally {
       if (mounted) {
         setState(() {
           _favoriteBusy = false;
         });
       }
+    }
+  }
+
+  Future<void> _openBooking() async {
+    final professional = _professional;
+    if (professional == null || _services.isEmpty) return;
+
+    final created = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => BookingScreen(
+          repository: widget.bookingRepository,
+          professional: professional,
+          services: _services,
+        ),
+      ),
+    );
+
+    if (created == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Your booking request was created.')),
+      );
+      await _load();
     }
   }
 
@@ -114,32 +140,17 @@ class _ProfessionalDetailScreenState extends State<ProfessionalDetailScreen> {
                     dimension: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : Icon(
-                    _isFavorite ? Icons.favorite : Icons.favorite_border,
-                  ),
+                : Icon(_isFavorite ? Icons.favorite : Icons.favorite_border),
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: _load,
-        child: _body(),
-      ),
+      body: RefreshIndicator(onRefresh: _load, child: _body()),
       bottomNavigationBar: _professional == null
           ? null
           : SafeArea(
               minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               child: FilledButton.icon(
-                onPressed: _services.isEmpty
-                    ? null
-                    : () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Availability selection is the next step.',
-                            ),
-                          ),
-                        );
-                      },
+                onPressed: _services.isEmpty ? null : _openBooking,
                 icon: const Icon(Icons.calendar_month_outlined),
                 label: const Text('Book appointment'),
               ),
@@ -170,10 +181,7 @@ class _ProfessionalDetailScreenState extends State<ProfessionalDetailScreen> {
           const SizedBox(height: 16),
           Text(_error!, textAlign: TextAlign.center),
           const SizedBox(height: 16),
-          FilledButton(
-            onPressed: _load,
-            child: const Text('Try again'),
-          ),
+          FilledButton(onPressed: _load, child: const Text('Try again')),
         ],
       );
     }
@@ -193,7 +201,8 @@ class _ProfessionalDetailScreenState extends State<ProfessionalDetailScreen> {
       children: [
         _ProfileHeader(professional: professional),
         const SizedBox(height: 24),
-        if (professional.bio != null && professional.bio!.trim().isNotEmpty) ...[
+        if (professional.bio != null &&
+            professional.bio!.trim().isNotEmpty) ...[
           const _SectionTitle('About'),
           const SizedBox(height: 8),
           Text(professional.bio!),
@@ -207,7 +216,10 @@ class _ProfessionalDetailScreenState extends State<ProfessionalDetailScreen> {
             children: [
               if (professional.experienceYears != null)
                 Chip(
-                  avatar: const Icon(Icons.workspace_premium_outlined, size: 18),
+                  avatar: const Icon(
+                    Icons.workspace_premium_outlined,
+                    size: 18,
+                  ),
                   label: Text(
                     '${professional.experienceYears} years experience',
                   ),
@@ -284,9 +296,8 @@ class _ProfileHeader extends StatelessWidget {
               backgroundColor: scheme.primaryContainer,
               child: Text(
                 _initials(professional.displayName),
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                style: Theme.of(context).textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w800),
               ),
             ),
             const SizedBox(width: 16),
@@ -299,9 +310,8 @@ class _ProfileHeader extends StatelessWidget {
                       Expanded(
                         child: Text(
                           professional.displayName,
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w800,
-                              ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.w800),
                         ),
                       ),
                       if (professional.verificationStatus == 'APPROVED')
@@ -363,9 +373,8 @@ class _ServiceCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     service.name,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                    style: Theme.of(context).textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w700),
                   ),
                 ),
                 Text(
@@ -384,7 +393,8 @@ class _ServiceCard extends StatelessWidget {
                 Text(service.priceType),
               ],
             ),
-            if (service.description != null && service.description!.trim().isNotEmpty) ...[
+            if (service.description != null &&
+                service.description!.trim().isNotEmpty) ...[
               const SizedBox(height: 10),
               Text(service.description!),
             ],
@@ -418,7 +428,8 @@ class _ReviewCard extends StatelessWidget {
                 ),
               ),
             ),
-            if (review.comment != null && review.comment!.trim().isNotEmpty) ...[
+            if (review.comment != null &&
+                review.comment!.trim().isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(review.comment!),
             ],
@@ -452,9 +463,8 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
-          ),
+      style: Theme.of(context).textTheme.titleLarge
+          ?.copyWith(fontWeight: FontWeight.w800),
     );
   }
 }

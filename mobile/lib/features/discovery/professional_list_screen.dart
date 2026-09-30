@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_exception.dart';
+import '../booking/booking_repository.dart';
 import 'discovery_repository.dart';
 import 'models/category_model.dart';
 import 'models/professional_summary.dart';
@@ -10,11 +11,13 @@ import 'widgets/professional_card.dart';
 class ProfessionalListScreen extends StatefulWidget {
   const ProfessionalListScreen({
     required this.repository,
+    required this.bookingRepository,
     this.category,
     super.key,
   });
 
   final DiscoveryRepository repository;
+  final BookingRepository bookingRepository;
   final CategoryModel? category;
 
   @override
@@ -50,6 +53,7 @@ class _ProfessionalListScreenState extends State<ProfessionalListScreen> {
       });
     } on ApiException catch (error) {
       if (!mounted) return;
+
       setState(() {
         _error = error.message;
       });
@@ -60,17 +64,6 @@ class _ProfessionalListScreenState extends State<ProfessionalListScreen> {
         });
       }
     }
-  }
-
-  void _openProfessional(ProfessionalSummary professional) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => ProfessionalDetailScreen(
-          repository: widget.repository,
-          professionalId: professional.id,
-        ),
-      ),
-    );
   }
 
   @override
@@ -129,9 +122,20 @@ class _ProfessionalListScreenState extends State<ProfessionalListScreen> {
       separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final professional = _professionals[index];
+
         return ProfessionalCard(
           professional: professional,
-          onTap: () => _openProfessional(professional),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => ProfessionalDetailScreen(
+                  repository: widget.repository,
+                  bookingRepository: widget.bookingRepository,
+                  professionalId: professional.id,
+                ),
+              ),
+            );
+          },
         );
       },
     );

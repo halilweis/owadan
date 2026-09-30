@@ -30,12 +30,25 @@ class ApiClient {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          if (options.extra['skipAuth'] != true) {
-            final token = await _tokenStorage.readAccessToken();
+          if (options.extra['skipAuth'] == true) {
+            handler.next(options);
+            return;
+          }
 
-            if (token != null && token.isNotEmpty) {
-              options.headers['Authorization'] = 'Bearer $token';
+          var token = await _tokenStorage.readAccessToken();
+
+          // A refresh token may still exist after the access token is missing.
+          // Recover the session before sending a protected request.
+          if (token == null || token.isEmpty) {
+            final refreshed = await _refreshTokens();
+
+            if (refreshed) {
+              token = await _tokenStorage.readAccessToken();
             }
+          }
+
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
           }
 
           handler.next(options);

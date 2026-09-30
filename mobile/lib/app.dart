@@ -5,6 +5,7 @@ import 'core/storage/token_storage.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/auth_repository.dart';
 import 'features/auth/otp_login_screen.dart';
+import 'features/booking/booking_repository.dart';
 import 'features/discovery/discovery_repository.dart';
 import 'features/home/home_screen.dart';
 
@@ -20,6 +21,7 @@ class _OwadanAppState extends State<OwadanApp> {
   late final ApiClient _apiClient;
   late final AuthRepository _authRepository;
   late final DiscoveryRepository _discoveryRepository;
+  late final BookingRepository _bookingRepository;
 
   bool _loading = true;
   bool _authenticated = false;
@@ -32,11 +34,13 @@ class _OwadanAppState extends State<OwadanApp> {
     _apiClient = ApiClient(_tokenStorage);
     _authRepository = AuthRepository(_apiClient, _tokenStorage);
     _discoveryRepository = DiscoveryRepository(_apiClient);
+    _bookingRepository = BookingRepository(_apiClient);
 
     _restoreSession();
   }
 
   Future<void> _restoreSession() async {
+    final accessToken = await _tokenStorage.readAccessToken();
     final refreshToken = await _tokenStorage.readRefreshToken();
 
     if (!mounted) {
@@ -44,7 +48,9 @@ class _OwadanAppState extends State<OwadanApp> {
     }
 
     setState(() {
-      _authenticated = refreshToken != null && refreshToken.isNotEmpty;
+      _authenticated =
+          (accessToken != null && accessToken.isNotEmpty) ||
+          (refreshToken != null && refreshToken.isNotEmpty);
       _loading = false;
     });
   }
@@ -73,6 +79,7 @@ class _OwadanAppState extends State<OwadanApp> {
           ? HomeScreen(
               authRepository: _authRepository,
               discoveryRepository: _discoveryRepository,
+              bookingRepository: _bookingRepository,
               onSignedOut: _signedOut,
             )
           : OtpLoginScreen(
