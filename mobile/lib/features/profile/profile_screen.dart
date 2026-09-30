@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/network/api_exception.dart';
 import '../auth/auth_repository.dart';
+import 'edit_profile_screen.dart';
 import 'models/account_user.dart';
 import 'profile_repository.dart';
 
@@ -59,6 +60,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _loading = false;
         });
       }
+    }
+  }
+
+  Future<void> _editProfile() async {
+    final user = _user;
+    if (user == null) return;
+
+    final updated = await Navigator.of(context).push<AccountUser>(
+      MaterialPageRoute<AccountUser>(
+        builder: (_) =>
+            EditProfileScreen(repository: widget.profileRepository, user: user),
+      ),
+    );
+
+    if (updated != null && mounted) {
+      setState(() {
+        _user = updated;
+      });
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Profile updated.')));
     }
   }
 
@@ -174,7 +196,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
       children: [
-        const _Header(),
+        Row(
+          children: [
+            const Expanded(child: _Header()),
+            IconButton(
+              tooltip: 'Edit profile',
+              onPressed: _editProfile,
+              icon: const Icon(Icons.edit_outlined),
+            ),
+          ],
+        ),
         const SizedBox(height: 24),
         _AccountCard(user: user),
         const SizedBox(height: 24),
@@ -185,6 +216,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: 12),
         _SettingTile(
+          icon: Icons.person_outline,
+          title: 'Display name',
+          subtitle: user.displayName?.trim().isNotEmpty == true
+              ? user.displayName!
+              : 'Not set',
+          onTap: _editProfile,
+        ),
+        _SettingTile(
           icon: Icons.phone_outlined,
           title: 'Phone number',
           subtitle: user.phoneNumber,
@@ -192,14 +231,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _SettingTile(
           icon: Icons.language_outlined,
           title: 'Language',
-          subtitle: 'English',
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Language settings will be added next.'),
-              ),
-            );
-          },
+          subtitle: _languageName(user.preferredLanguage),
+          onTap: _editProfile,
         ),
         _SettingTile(
           icon: Icons.security_outlined,
@@ -233,6 +266,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (user.isProfessional) return 'Customer + Professional';
     return 'Customer';
   }
+
+  String _languageName(String code) {
+    return switch (code) {
+      'tk' => 'Türkmençe',
+      'ru' => 'Русский',
+      _ => 'English',
+    };
+  }
 }
 
 class _Header extends StatelessWidget {
@@ -256,6 +297,9 @@ class _AccountCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final title = user.displayName?.trim().isNotEmpty == true
+        ? user.displayName!
+        : user.phoneNumber;
 
     return Card(
       child: Padding(
@@ -265,10 +309,10 @@ class _AccountCard extends StatelessWidget {
             CircleAvatar(
               radius: 34,
               backgroundColor: scheme.primaryContainer,
-              child: Icon(
-                Icons.person_outline,
-                size: 34,
-                color: scheme.onPrimaryContainer,
+              child: Text(
+                _initial(title),
+                style: Theme.of(context).textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w800),
               ),
             ),
             const SizedBox(width: 16),
@@ -277,10 +321,12 @@ class _AccountCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    user.phoneNumber,
+                    title,
                     style: Theme.of(context).textTheme.titleLarge
                         ?.copyWith(fontWeight: FontWeight.w800),
                   ),
+                  const SizedBox(height: 6),
+                  if (title != user.phoneNumber) Text(user.phoneNumber),
                   const SizedBox(height: 6),
                   Text(
                     user.roles
@@ -294,6 +340,11 @@ class _AccountCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _initial(String value) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? '?' : trimmed[0].toUpperCase();
   }
 }
 

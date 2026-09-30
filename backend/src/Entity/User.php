@@ -24,6 +24,12 @@ class User implements UserInterface
     #[ORM\Column(options: ['default' => true])]
     private bool $active = true;
 
+    #[ORM\Column(length: 120, nullable: true)]
+    private ?string $displayName = null;
+
+    #[ORM\Column(length: 2, options: ['default' => 'en'])]
+    private string $preferredLanguage = 'en';
+
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
 
@@ -42,6 +48,31 @@ class User implements UserInterface
     public function getPhoneNumber(): string
     {
         return $this->phoneNumber;
+    }
+
+    public function getDisplayName(): ?string
+    {
+        return $this->displayName;
+    }
+
+    public function setDisplayName(?string $displayName): self
+    {
+        $displayName = $displayName !== null ? trim($displayName) : null;
+        $this->displayName = $displayName === '' ? null : $displayName;
+
+        return $this;
+    }
+
+    public function getPreferredLanguage(): string
+    {
+        return $this->preferredLanguage;
+    }
+
+    public function setPreferredLanguage(string $preferredLanguage): self
+    {
+        $this->preferredLanguage = $preferredLanguage;
+
+        return $this;
     }
 
     public function getUserIdentifier(): string

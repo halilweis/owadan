@@ -3,10 +3,14 @@ class AccountUser {
     required this.id,
     required this.phoneNumber,
     required this.roles,
+    required this.preferredLanguage,
+    this.displayName,
   });
 
   final String id;
   final String phoneNumber;
+  final String? displayName;
+  final String preferredLanguage;
   final List<String> roles;
 
   bool get isProfessional => roles.contains('ROLE_PROFESSIONAL');
@@ -16,6 +20,8 @@ class AccountUser {
     return AccountUser(
       id: json['id']?.toString() ?? '',
       phoneNumber: json['phoneNumber']?.toString() ?? '',
+      displayName: json['displayName']?.toString(),
+      preferredLanguage: json['preferredLanguage']?.toString() ?? 'en',
       roles: (json['roles'] as List<dynamic>? ?? const [])
           .map((item) => item.toString())
           .toList(),
