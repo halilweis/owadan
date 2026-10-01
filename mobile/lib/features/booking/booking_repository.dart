@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../core/network/api_client.dart';
+import '../discovery/models/professional_review.dart';
 import '../discovery/models/professional_service.dart';
 import 'models/availability_slot.dart';
 import 'models/booking_model.dart';
@@ -113,6 +114,39 @@ class BookingRepository {
       }
 
       return BookingModel.fromJson(booking);
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
+
+  Future<ProfessionalReview> submitReview({
+    required String bookingId,
+    required int rating,
+    String? comment,
+  }) async {
+    try {
+      final trimmedComment = comment?.trim();
+
+      final response = await _apiClient.dio.post<Map<String, dynamic>>(
+        '/api/v1/bookings/$bookingId/review',
+        data: {
+          'rating': rating,
+          if (trimmedComment != null && trimmedComment.isNotEmpty)
+            'comment': trimmedComment,
+        },
+      );
+
+      final data = response.data?['data'];
+      if (data is! Map<String, dynamic>) {
+        throw StateError('Invalid review response.');
+      }
+
+      final review = data['review'];
+      if (review is! Map<String, dynamic>) {
+        throw StateError('Invalid review response.');
+      }
+
+      return ProfessionalReview.fromJson(review);
     } on DioException catch (error) {
       throw ApiClient.mapError(error);
     }
