@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/localization/app_localizations.dart';
 import '../../core/network/api_exception.dart';
 import '../booking/booking_repository.dart';
 import 'discovery_repository.dart';
@@ -15,11 +16,9 @@ class ProfessionalListScreen extends StatefulWidget {
     this.category,
     super.key,
   });
-
   final DiscoveryRepository repository;
   final BookingRepository bookingRepository;
   final CategoryModel? category;
-
   @override
   State<ProfessionalListScreen> createState() => _ProfessionalListScreenState();
 }
@@ -28,7 +27,6 @@ class _ProfessionalListScreenState extends State<ProfessionalListScreen> {
   bool _loading = true;
   String? _error;
   List<ProfessionalSummary> _professionals = const [];
-
   @override
   void initState() {
     super.initState();
@@ -40,36 +38,26 @@ class _ProfessionalListScreenState extends State<ProfessionalListScreen> {
       _loading = true;
       _error = null;
     });
-
     try {
       final result = await widget.repository.fetchProfessionals(
         categorySlug: widget.category?.slug,
       );
-
       if (!mounted) return;
-
-      setState(() {
-        _professionals = result.items;
-      });
+      setState(() => _professionals = result.items);
     } on ApiException catch (error) {
       if (!mounted) return;
-
-      setState(() {
-        _error = error.message;
-      });
+      setState(() => _error = error.message);
     } finally {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-        });
-      }
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final title = widget.category?.displayName() ?? 'Explore';
-
+    final l10n = context.l10n;
+    final title =
+        widget.category?.displayName(locale: l10n.languageCode) ??
+        l10n.t('explore');
     return Scaffold(
       appBar: AppBar(title: Text(title)),
       body: RefreshIndicator(onRefresh: _load, child: _buildBody()),
@@ -77,6 +65,7 @@ class _ProfessionalListScreenState extends State<ProfessionalListScreen> {
   }
 
   Widget _buildBody() {
+    final l10n = context.l10n;
     if (_loading) {
       return ListView(
         children: const [
@@ -85,7 +74,6 @@ class _ProfessionalListScreenState extends State<ProfessionalListScreen> {
         ],
       );
     }
-
     if (_error != null) {
       return ListView(
         padding: const EdgeInsets.all(24),
@@ -99,39 +87,36 @@ class _ProfessionalListScreenState extends State<ProfessionalListScreen> {
           const SizedBox(height: 16),
           Text(_error!, textAlign: TextAlign.center),
           const SizedBox(height: 16),
-          FilledButton(onPressed: _load, child: const Text('Try again')),
+          FilledButton(onPressed: _load, child: Text(l10n.t('tryAgain'))),
         ],
       );
     }
-
     if (_professionals.isEmpty) {
       return ListView(
         padding: const EdgeInsets.all(24),
-        children: const [
-          SizedBox(height: 120),
-          Icon(Icons.search_off_outlined, size: 52),
-          SizedBox(height: 16),
-          Text('No professionals found.', textAlign: TextAlign.center),
+        children: [
+          const SizedBox(height: 120),
+          const Icon(Icons.search_off_outlined, size: 52),
+          const SizedBox(height: 16),
+          Text(l10n.t('noProfessionalsFound'), textAlign: TextAlign.center),
         ],
       );
     }
-
     return ListView.separated(
       padding: const EdgeInsets.all(16),
       itemCount: _professionals.length,
       separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
-        final professional = _professionals[index];
-
+        final p = _professionals[index];
         return ProfessionalCard(
-          professional: professional,
+          professional: p,
           onTap: () {
             Navigator.of(context).push(
               MaterialPageRoute<void>(
                 builder: (_) => ProfessionalDetailScreen(
                   repository: widget.repository,
                   bookingRepository: widget.bookingRepository,
-                  professionalId: professional.id,
+                  professionalId: p.id,
                 ),
               ),
             );

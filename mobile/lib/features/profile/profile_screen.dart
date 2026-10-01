@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/localization/app_localizations.dart';
 import '../../core/network/api_exception.dart';
 import '../auth/auth_repository.dart';
 import 'edit_profile_screen.dart';
@@ -11,12 +12,14 @@ class ProfileScreen extends StatefulWidget {
     required this.profileRepository,
     required this.authRepository,
     required this.onSignedOut,
+    required this.onLanguageChanged,
     super.key,
   });
 
   final ProfileRepository profileRepository;
   final AuthRepository authRepository;
   final VoidCallback onSignedOut;
+  final ValueChanged<String> onLanguageChanged;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -39,27 +42,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _loading = true;
       _error = null;
     });
-
     try {
       final user = await widget.profileRepository.fetchMe();
-
       if (!mounted) return;
-
-      setState(() {
-        _user = user;
-      });
+      setState(() => _user = user);
     } on ApiException catch (error) {
       if (!mounted) return;
-
-      setState(() {
-        _error = error.message;
-      });
+      setState(() => _error = error.message);
     } finally {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-        });
-      }
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -75,71 +66,54 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
 
     if (updated != null && mounted) {
-      setState(() {
-        _user = updated;
-      });
-
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Profile updated.')));
+      setState(() => _user = updated);
+      widget.onLanguageChanged(updated.preferredLanguage);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.t('profileUpdated'))));
     }
   }
 
   Future<void> _logout() async {
     if (_busy) return;
-
-    setState(() {
-      _busy = true;
-    });
-
+    setState(() => _busy = true);
     await widget.authRepository.logout();
-
     if (!mounted) return;
     widget.onSignedOut();
   }
 
   Future<void> _logoutAll() async {
     if (_busy) return;
-
+    final l10n = context.l10n;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Sign out from all devices?'),
-        content: const Text(
-          'This will revoke all active sessions for your Owadan account.',
-        ),
+        title: Text(l10n.t('signOutAllQuestion')),
+        content: Text(l10n.t('signOutAllMessage')),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.t('cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Sign out all'),
+            child: Text(l10n.t('signOutAll')),
           ),
         ],
       ),
     );
-
     if (confirmed != true || !mounted) return;
 
-    setState(() {
-      _busy = true;
-    });
-
+    setState(() => _busy = true);
     try {
       await widget.authRepository.logoutAll();
-
       if (!mounted) return;
       widget.onSignedOut();
     } on ApiException catch (error) {
       if (!mounted) return;
-
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(error.message)));
-
-      setState(() {
-        _busy = false;
-      });
+      setState(() => _busy = false);
     }
   }
 
@@ -151,13 +125,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildBody() {
+    final l10n = context.l10n;
     if (_loading) {
       return ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-        children: const [
-          _Header(),
-          SizedBox(height: 220),
-          Center(child: CircularProgressIndicator()),
+        children: [
+          _Header(text: l10n.t('profile')),
+          const SizedBox(height: 220),
+          const Center(child: CircularProgressIndicator()),
         ],
       );
     }
@@ -166,7 +141,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
         children: [
-          const _Header(),
+          _Header(text: l10n.t('profile')),
           const SizedBox(height: 120),
           Icon(
             Icons.cloud_off_outlined,
@@ -176,7 +151,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 16),
           Text(_error!, textAlign: TextAlign.center),
           const SizedBox(height: 16),
-          FilledButton(onPressed: _load, child: const Text('Try again')),
+          FilledButton(onPressed: _load, child: Text(l10n.t('tryAgain'))),
         ],
       );
     }
@@ -185,10 +160,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (user == null) {
       return ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-        children: const [
-          _Header(),
-          SizedBox(height: 140),
-          Center(child: Text('Account information unavailable.')),
+        children: [
+          _Header(text: l10n.t('profile')),
+          const SizedBox(height: 140),
+          Center(child: Text(l10n.t('accountUnavailable'))),
         ],
       );
     }
@@ -198,9 +173,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         Row(
           children: [
-            const Expanded(child: _Header()),
+            Expanded(child: _Header(text: l10n.t('profile'))),
             IconButton(
-              tooltip: 'Edit profile',
+              tooltip: l10n.t('editProfile'),
               onPressed: _editProfile,
               icon: const Icon(Icons.edit_outlined),
             ),
@@ -210,38 +185,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _AccountCard(user: user),
         const SizedBox(height: 24),
         Text(
-          'Account',
+          l10n.t('account'),
           style: Theme.of(context).textTheme.titleLarge
               ?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 12),
         _SettingTile(
           icon: Icons.person_outline,
-          title: 'Display name',
+          title: l10n.t('displayName'),
           subtitle: user.displayName?.trim().isNotEmpty == true
               ? user.displayName!
-              : 'Not set',
+              : l10n.t('notSet'),
           onTap: _editProfile,
         ),
         _SettingTile(
           icon: Icons.phone_outlined,
-          title: 'Phone number',
+          title: l10n.t('phoneNumber'),
           subtitle: user.phoneNumber,
         ),
         _SettingTile(
           icon: Icons.language_outlined,
-          title: 'Language',
+          title: l10n.t('language'),
           subtitle: _languageName(user.preferredLanguage),
           onTap: _editProfile,
         ),
         _SettingTile(
           icon: Icons.security_outlined,
-          title: 'Account type',
+          title: l10n.t('accountType'),
           subtitle: _accountType(user),
         ),
         const SizedBox(height: 24),
         Text(
-          'Session',
+          l10n.t('session'),
           style: Theme.of(context).textTheme.titleLarge
               ?.copyWith(fontWeight: FontWeight.w800),
         ),
@@ -249,58 +224,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
         OutlinedButton.icon(
           onPressed: _busy ? null : _logout,
           icon: const Icon(Icons.logout),
-          label: const Text('Sign out'),
+          label: Text(l10n.t('signOut')),
         ),
         const SizedBox(height: 10),
         TextButton.icon(
           onPressed: _busy ? null : _logoutAll,
           icon: const Icon(Icons.logout_outlined),
-          label: const Text('Sign out from all devices'),
+          label: Text(l10n.t('signOutAll')),
         ),
       ],
     );
   }
 
   String _accountType(AccountUser user) {
-    if (user.isAdmin) return 'Administrator';
-    if (user.isProfessional) return 'Customer + Professional';
-    return 'Customer';
+    final l10n = context.l10n;
+    if (user.isAdmin) return l10n.t('administrator');
+    if (user.isProfessional) return l10n.t('customerProfessional');
+    return l10n.t('customer');
   }
 
-  String _languageName(String code) {
-    return switch (code) {
-      'tk' => 'Türkmençe',
-      'ru' => 'Русский',
-      _ => 'English',
-    };
-  }
+  String _languageName(String code) => switch (code) {
+    'tk' => 'Türkmençe',
+    'ru' => 'Русский',
+    _ => 'English',
+  };
 }
 
 class _Header extends StatelessWidget {
-  const _Header();
-
+  const _Header({required this.text});
+  final String text;
   @override
-  Widget build(BuildContext context) {
-    return Text(
-      'Profile',
-      style: Theme.of(context).textTheme.headlineMedium
-          ?.copyWith(fontWeight: FontWeight.w800),
-    );
-  }
+  Widget build(BuildContext context) => Text(
+    text,
+    style: Theme.of(context).textTheme.headlineMedium
+        ?.copyWith(fontWeight: FontWeight.w800),
+  );
 }
 
 class _AccountCard extends StatelessWidget {
   const _AccountCard({required this.user});
-
   final AccountUser user;
-
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final title = user.displayName?.trim().isNotEmpty == true
         ? user.displayName!
         : user.phoneNumber;
-
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -327,12 +296,6 @@ class _AccountCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   if (title != user.phoneNumber) Text(user.phoneNumber),
-                  const SizedBox(height: 6),
-                  Text(
-                    user.roles
-                        .map((role) => role.replaceFirst('ROLE_', ''))
-                        .join(' • '),
-                  ),
                 ],
               ),
             ),
@@ -355,23 +318,19 @@ class _SettingTile extends StatelessWidget {
     required this.subtitle,
     this.onTap,
   });
-
   final IconData icon;
   final String title;
   final String subtitle;
   final VoidCallback? onTap;
-
   @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      child: ListTile(
-        leading: Icon(icon),
-        title: Text(title),
-        subtitle: Text(subtitle),
-        trailing: onTap == null ? null : const Icon(Icons.chevron_right),
-        onTap: onTap,
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Card(
+    margin: const EdgeInsets.only(bottom: 10),
+    child: ListTile(
+      leading: Icon(icon),
+      title: Text(title),
+      subtitle: Text(subtitle),
+      trailing: onTap == null ? null : const Icon(Icons.chevron_right),
+      onTap: onTap,
+    ),
+  );
 }

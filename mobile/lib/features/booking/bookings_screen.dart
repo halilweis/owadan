@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/localization/app_localizations.dart';
 import '../../core/network/api_exception.dart';
 import '../discovery/discovery_repository.dart';
 import '../discovery/models/professional_summary.dart';
@@ -13,10 +14,8 @@ class BookingsScreen extends StatefulWidget {
     required this.discoveryRepository,
     super.key,
   });
-
   final BookingRepository bookingRepository;
   final DiscoveryRepository discoveryRepository;
-
   @override
   State<BookingsScreen> createState() => _BookingsScreenState();
 }
@@ -39,12 +38,10 @@ class _BookingsScreenState extends State<BookingsScreen> {
       _loading = true;
       _error = null;
     });
-
     try {
       final bookings = await widget.bookingRepository.fetchMyBookings();
       if (!mounted) return;
       setState(() => _bookings = bookings);
-
       for (final id in bookings.map((e) => e.professionalId).toSet()) {
         if (_professionals.containsKey(id)) continue;
         try {
@@ -82,8 +79,8 @@ class _BookingsScreenState extends State<BookingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final current = _segment == 0 ? _upcoming : _history;
-
     return SafeArea(
       child: RefreshIndicator(
         onRefresh: _load,
@@ -91,15 +88,15 @@ class _BookingsScreenState extends State<BookingsScreen> {
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
           children: [
             Text(
-              'Bookings',
+              l10n.t('bookings'),
               style: Theme.of(context).textTheme.headlineMedium
                   ?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 18),
             SegmentedButton<int>(
-              segments: const [
-                ButtonSegment(value: 0, label: Text('Upcoming')),
-                ButtonSegment(value: 1, label: Text('History')),
+              segments: [
+                ButtonSegment(value: 0, label: Text(l10n.t('upcoming'))),
+                ButtonSegment(value: 1, label: Text(l10n.t('history'))),
               ],
               selected: {_segment},
               onSelectionChanged: (value) =>
@@ -117,7 +114,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                 text: _error!,
                 action: TextButton(
                   onPressed: _load,
-                  child: const Text('Try again'),
+                  child: Text(l10n.t('tryAgain')),
                 ),
               )
             else if (current.isEmpty)
@@ -126,8 +123,8 @@ class _BookingsScreenState extends State<BookingsScreen> {
                     ? Icons.event_available_outlined
                     : Icons.history,
                 text: _segment == 0
-                    ? 'No upcoming bookings.'
-                    : 'No booking history.',
+                    ? l10n.t('noUpcomingBookings')
+                    : l10n.t('noBookingHistory'),
               )
             else
               ...current.map(
@@ -167,14 +164,14 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                   Text(
                                     _professionals[booking.professionalId]
                                             ?.displayName ??
-                                        'Professional',
+                                        l10n.t('professional'),
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
                                     '${_date(booking.startsAt.toLocal())} • ${_time(booking.startsAt.toLocal())}',
                                   ),
                                   const SizedBox(height: 8),
-                                  Text(_status(booking.status)),
+                                  Text(l10n.status(booking.status)),
                                 ],
                               ),
                             ),
@@ -192,43 +189,27 @@ class _BookingsScreenState extends State<BookingsScreen> {
     );
   }
 
-  String _status(String status) => switch (status) {
-    'PENDING' => 'Pending',
-    'CONFIRMED' => 'Confirmed',
-    'DECLINED' => 'Declined',
-    'CANCELLED_BY_CUSTOMER' => 'Cancelled',
-    'CANCELLED_BY_PROFESSIONAL' => 'Cancelled',
-    'COMPLETED' => 'Completed',
-    'NO_SHOW' => 'No show',
-    _ => status,
-  };
-
   String _date(DateTime value) =>
       '${value.year}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
-
   String _time(DateTime value) =>
       '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
 }
 
 class _Message extends StatelessWidget {
   const _Message({required this.icon, required this.text, this.action});
-
   final IconData icon;
   final String text;
   final Widget? action;
-
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 100),
-      child: Column(
-        children: [
-          Icon(icon, size: 56),
-          const SizedBox(height: 16),
-          Text(text, textAlign: TextAlign.center),
-          if (action != null) ...[const SizedBox(height: 12), action!],
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 100),
+    child: Column(
+      children: [
+        Icon(icon, size: 56),
+        const SizedBox(height: 16),
+        Text(text, textAlign: TextAlign.center),
+        if (action != null) ...[const SizedBox(height: 12), action!],
+      ],
+    ),
+  );
 }

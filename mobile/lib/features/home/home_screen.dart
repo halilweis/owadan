@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../core/localization/app_localizations.dart';
 import '../../core/network/api_exception.dart';
 import '../auth/auth_repository.dart';
 import '../booking/booking_repository.dart';
+import '../booking/bookings_screen.dart';
 import '../discovery/discovery_repository.dart';
 import '../discovery/models/category_model.dart';
 import '../discovery/models/professional_summary.dart';
@@ -10,7 +12,6 @@ import '../discovery/professional_detail_screen.dart';
 import '../discovery/professional_list_screen.dart';
 import '../discovery/widgets/category_chip_card.dart';
 import '../discovery/widgets/professional_card.dart';
-import '../booking/bookings_screen.dart';
 import '../favorites/favorites_screen.dart';
 import '../profile/profile_repository.dart';
 import '../profile/profile_screen.dart';
@@ -22,14 +23,16 @@ class HomeScreen extends StatefulWidget {
     required this.bookingRepository,
     required this.profileRepository,
     required this.onSignedOut,
+    required this.onLanguageChanged,
     super.key,
   });
 
   final AuthRepository authRepository;
   final DiscoveryRepository discoveryRepository;
   final BookingRepository bookingRepository;
-  final VoidCallback onSignedOut;
   final ProfileRepository profileRepository;
+  final VoidCallback onSignedOut;
+  final ValueChanged<String> onLanguageChanged;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -59,32 +62,26 @@ class _HomeScreenState extends State<HomeScreen> {
       final professionalsFuture = widget.discoveryRepository.fetchProfessionals(
         size: 6,
       );
-
       final categories = await categoriesFuture;
       final professionalsPage = await professionalsFuture;
 
       if (!mounted) return;
-
       setState(() {
         _categories = categories;
         _professionals = professionalsPage.items;
       });
     } on ApiException catch (error) {
       if (!mounted) return;
-      setState(() {
-        _error = error.message;
-      });
+      setState(() => _error = error.message);
     } finally {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-        });
-      }
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Scaffold(
       body: switch (_selectedIndex) {
         0 => _buildHome(),
@@ -104,40 +101,38 @@ class _HomeScreenState extends State<HomeScreen> {
           profileRepository: widget.profileRepository,
           authRepository: widget.authRepository,
           onSignedOut: widget.onSignedOut,
+          onLanguageChanged: widget.onLanguageChanged,
         ),
       },
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
-        onDestinationSelected: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        destinations: const [
+        onDestinationSelected: (index) =>
+            setState(() => _selectedIndex = index),
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Home',
+            icon: const Icon(Icons.home_outlined),
+            selectedIcon: const Icon(Icons.home),
+            label: l10n.t('home'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.search_outlined),
-            selectedIcon: Icon(Icons.search),
-            label: 'Explore',
+            icon: const Icon(Icons.search_outlined),
+            selectedIcon: const Icon(Icons.search),
+            label: l10n.t('explore'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.calendar_month_outlined),
-            selectedIcon: Icon(Icons.calendar_month),
-            label: 'Bookings',
+            icon: const Icon(Icons.calendar_month_outlined),
+            selectedIcon: const Icon(Icons.calendar_month),
+            label: l10n.t('bookings'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.favorite_border),
-            selectedIcon: Icon(Icons.favorite),
-            label: 'Favorites',
+            icon: const Icon(Icons.favorite_border),
+            selectedIcon: const Icon(Icons.favorite),
+            label: l10n.t('favorites'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Profile',
+            icon: const Icon(Icons.person_outline),
+            selectedIcon: const Icon(Icons.person),
+            label: l10n.t('profile'),
           ),
         ],
       ),
@@ -145,6 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHome() {
+    final l10n = context.l10n;
     return SafeArea(
       child: RefreshIndicator(
         onRefresh: _loadHome,
@@ -161,42 +157,30 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Notifications',
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Notifications screen is next.'),
-                      ),
-                    );
-                  },
+                  tooltip: l10n.t('notifications'),
+                  onPressed: () {},
                   icon: const Icon(Icons.notifications_none),
                 ),
               ],
             ),
             const SizedBox(height: 12),
             Text(
-              'Find your next beauty appointment',
+              l10n.t('findBeauty'),
               style: Theme.of(context).textTheme.titleLarge
                   ?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Discover verified professionals and book the service that fits you.',
-            ),
+            Text(l10n.t('discoverVerified')),
             const SizedBox(height: 20),
             SearchBar(
-              hintText: 'Search professionals',
+              hintText: l10n.t('searchProfessionals'),
               leading: const Icon(Icons.search),
-              onTap: () {
-                setState(() {
-                  _selectedIndex = 1;
-                });
-              },
+              onTap: () => setState(() => _selectedIndex = 1),
             ),
             const SizedBox(height: 28),
             _sectionHeader(
-              title: 'Categories',
-              actionText: 'See all',
+              title: l10n.t('categories'),
+              actionText: l10n.t('seeAll'),
               onAction: () {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
@@ -217,9 +201,9 @@ class _HomeScreenState extends State<HomeScreen> {
             else if (_error != null)
               _ErrorCard(message: _error!, onRetry: _loadHome)
             else if (_categories.isEmpty)
-              const _EmptyCard(
+              _EmptyCard(
                 icon: Icons.category_outlined,
-                message: 'No categories available yet.',
+                message: l10n.t('noCategories'),
               )
             else
               SizedBox(
@@ -230,7 +214,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   separatorBuilder: (_, _) => const SizedBox(width: 12),
                   itemBuilder: (context, index) {
                     final category = _categories[index];
-
                     return CategoryChipCard(
                       category: category,
                       onTap: () {
@@ -250,19 +233,15 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             const SizedBox(height: 30),
             _sectionHeader(
-              title: 'Recommended professionals',
-              actionText: 'Explore',
-              onAction: () {
-                setState(() {
-                  _selectedIndex = 1;
-                });
-              },
+              title: l10n.t('recommendedProfessionals'),
+              actionText: l10n.t('explore'),
+              onAction: () => setState(() => _selectedIndex = 1),
             ),
             const SizedBox(height: 14),
             if (!_loading && _professionals.isEmpty && _error == null)
-              const _EmptyCard(
+              _EmptyCard(
                 icon: Icons.people_outline,
-                message: 'No professionals available yet.',
+                message: l10n.t('noProfessionals'),
               )
             else
               ..._professionals.map(
@@ -312,51 +291,46 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class _ErrorCard extends StatelessWidget {
   const _ErrorCard({required this.message, required this.onRetry});
-
   final String message;
   final VoidCallback onRetry;
-
   @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          children: [
-            Icon(
-              Icons.cloud_off_outlined,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(height: 8),
-            Text(message, textAlign: TextAlign.center),
-            const SizedBox(height: 8),
-            TextButton(onPressed: onRetry, child: const Text('Try again')),
-          ],
-        ),
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        children: [
+          Icon(
+            Icons.cloud_off_outlined,
+            color: Theme.of(context).colorScheme.error,
+          ),
+          const SizedBox(height: 8),
+          Text(message, textAlign: TextAlign.center),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: onRetry,
+            child: Text(context.l10n.t('tryAgain')),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
 }
 
 class _EmptyCard extends StatelessWidget {
   const _EmptyCard({required this.icon, required this.message});
-
   final IconData icon;
   final String message;
-
   @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Row(
-          children: [
-            Icon(icon),
-            const SizedBox(width: 12),
-            Expanded(child: Text(message)),
-          ],
-        ),
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(18),
+      child: Row(
+        children: [
+          Icon(icon),
+          const SizedBox(width: 12),
+          Expanded(child: Text(message)),
+        ],
       ),
-    );
-  }
+    ),
+  );
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/localization/app_localizations.dart';
 import '../../core/network/api_exception.dart';
 import '../booking/booking_repository.dart';
 import '../booking/booking_screen.dart';
@@ -15,11 +16,9 @@ class ProfessionalDetailScreen extends StatefulWidget {
     required this.professionalId,
     super.key,
   });
-
   final DiscoveryRepository repository;
   final BookingRepository bookingRepository;
   final String professionalId;
-
   @override
   State<ProfessionalDetailScreen> createState() =>
       _ProfessionalDetailScreenState();
@@ -33,7 +32,6 @@ class _ProfessionalDetailScreenState extends State<ProfessionalDetailScreen> {
   List<ProfessionalService> _services = const [];
   List<ProfessionalReview> _reviews = const [];
   bool _isFavorite = false;
-
   @override
   void initState() {
     super.initState();
@@ -45,14 +43,11 @@ class _ProfessionalDetailScreenState extends State<ProfessionalDetailScreen> {
       _loading = true;
       _error = null;
     });
-
     try {
       final bundle = await widget.repository.fetchProfessionalDetailBundle(
         widget.professionalId,
       );
-
       if (!mounted) return;
-
       setState(() {
         _professional = bundle.professional;
         _services = bundle.services;
@@ -61,53 +56,35 @@ class _ProfessionalDetailScreenState extends State<ProfessionalDetailScreen> {
       });
     } on ApiException catch (error) {
       if (!mounted) return;
-      setState(() {
-        _error = error.message;
-      });
+      setState(() => _error = error.message);
     } finally {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-        });
-      }
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   Future<void> _toggleFavorite() async {
     if (_favoriteBusy) return;
-
-    setState(() {
-      _favoriteBusy = true;
-    });
-
+    setState(() => _favoriteBusy = true);
     try {
       if (_isFavorite) {
         await widget.repository.removeFavorite(widget.professionalId);
       } else {
         await widget.repository.addFavorite(widget.professionalId);
       }
-
       if (!mounted) return;
-      setState(() {
-        _isFavorite = !_isFavorite;
-      });
+      setState(() => _isFavorite = !_isFavorite);
     } on ApiException catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(error.message)));
     } finally {
-      if (mounted) {
-        setState(() {
-          _favoriteBusy = false;
-        });
-      }
+      if (mounted) setState(() => _favoriteBusy = false);
     }
   }
 
   Future<void> _openBooking() async {
     final professional = _professional;
     if (professional == null || _services.isEmpty) return;
-
     final created = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
         builder: (_) => BookingScreen(
@@ -117,23 +94,22 @@ class _ProfessionalDetailScreenState extends State<ProfessionalDetailScreen> {
         ),
       ),
     );
-
     if (created == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Your booking request was created.')),
-      );
       await _load();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Professional'),
+        title: Text(l10n.t('professional')),
         actions: [
           IconButton(
-            tooltip: _isFavorite ? 'Remove favorite' : 'Add favorite',
+            tooltip: _isFavorite
+                ? l10n.t('removeFavorite')
+                : l10n.t('addFavorite'),
             onPressed: _loading || _favoriteBusy ? null : _toggleFavorite,
             icon: _favoriteBusy
                 ? const SizedBox.square(
@@ -152,13 +128,14 @@ class _ProfessionalDetailScreenState extends State<ProfessionalDetailScreen> {
               child: FilledButton.icon(
                 onPressed: _services.isEmpty ? null : _openBooking,
                 icon: const Icon(Icons.calendar_month_outlined),
-                label: const Text('Book appointment'),
+                label: Text(l10n.t('bookAppointment')),
               ),
             ),
     );
   }
 
   Widget _body() {
+    final l10n = context.l10n;
     if (_loading) {
       return ListView(
         children: const [
@@ -167,7 +144,6 @@ class _ProfessionalDetailScreenState extends State<ProfessionalDetailScreen> {
         ],
       );
     }
-
     if (_error != null) {
       return ListView(
         padding: const EdgeInsets.all(24),
@@ -181,21 +157,19 @@ class _ProfessionalDetailScreenState extends State<ProfessionalDetailScreen> {
           const SizedBox(height: 16),
           Text(_error!, textAlign: TextAlign.center),
           const SizedBox(height: 16),
-          FilledButton(onPressed: _load, child: const Text('Try again')),
+          FilledButton(onPressed: _load, child: Text(l10n.t('tryAgain'))),
         ],
       );
     }
-
     final professional = _professional;
     if (professional == null) {
       return ListView(
-        children: const [
-          SizedBox(height: 200),
-          Center(child: Text('Professional not found.')),
+        children: [
+          const SizedBox(height: 200),
+          Center(child: Text(l10n.t('professionalNotFound'))),
         ],
       );
     }
-
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
       children: [
@@ -203,7 +177,7 @@ class _ProfessionalDetailScreenState extends State<ProfessionalDetailScreen> {
         const SizedBox(height: 24),
         if (professional.bio != null &&
             professional.bio!.trim().isNotEmpty) ...[
-          const _SectionTitle('About'),
+          _SectionTitle(l10n.t('about')),
           const SizedBox(height: 8),
           Text(professional.bio!),
           const SizedBox(height: 24),
@@ -221,7 +195,9 @@ class _ProfessionalDetailScreenState extends State<ProfessionalDetailScreen> {
                     size: 18,
                   ),
                   label: Text(
-                    '${professional.experienceYears} years experience',
+                    l10n.replace('yearsExperience', {
+                      'count': professional.experienceYears,
+                    }),
                   ),
                 ),
               ...professional.languages.map(
@@ -234,12 +210,12 @@ class _ProfessionalDetailScreenState extends State<ProfessionalDetailScreen> {
           ),
           const SizedBox(height: 24),
         ],
-        const _SectionTitle('Services'),
+        _SectionTitle(l10n.t('services')),
         const SizedBox(height: 12),
         if (_services.isEmpty)
-          const _EmptyCard(
+          _EmptyCard(
             icon: Icons.design_services_outlined,
-            text: 'No active services yet.',
+            text: l10n.t('noActiveServices'),
           )
         else
           ..._services.map(
@@ -251,7 +227,7 @@ class _ProfessionalDetailScreenState extends State<ProfessionalDetailScreen> {
         const SizedBox(height: 16),
         Row(
           children: [
-            const Expanded(child: _SectionTitle('Reviews')),
+            Expanded(child: _SectionTitle(l10n.t('reviews'))),
             Text(
               '${professional.reviewCount}',
               style: Theme.of(context).textTheme.titleMedium,
@@ -260,9 +236,9 @@ class _ProfessionalDetailScreenState extends State<ProfessionalDetailScreen> {
         ),
         const SizedBox(height: 12),
         if (_reviews.isEmpty)
-          const _EmptyCard(
+          _EmptyCard(
             icon: Icons.rate_review_outlined,
-            text: 'No reviews yet.',
+            text: l10n.t('noReviews'),
           )
         else
           ..._reviews.map(
@@ -278,13 +254,11 @@ class _ProfessionalDetailScreenState extends State<ProfessionalDetailScreen> {
 
 class _ProfileHeader extends StatelessWidget {
   const _ProfileHeader({required this.professional});
-
   final ProfessionalSummary professional;
-
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-
+    final l10n = context.l10n;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -325,7 +299,7 @@ class _ProfileHeader extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         professional.averageRating == null
-                            ? 'New'
+                            ? l10n.t('newProfessional')
                             : professional.averageRating!.toStringAsFixed(1),
                       ),
                       const SizedBox(width: 6),
@@ -335,8 +309,11 @@ class _ProfileHeader extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     professional.minPrice == null
-                        ? 'Price on request'
-                        : 'From ${professional.minPrice!.toStringAsFixed(2)} ${professional.currency}',
+                        ? l10n.t('priceOnRequest')
+                        : l10n.replace('fromPrice', {
+                            'price': professional.minPrice!.toStringAsFixed(2),
+                            'currency': professional.currency,
+                          }),
                   ),
                 ],
               ),
@@ -356,138 +333,122 @@ class _ProfileHeader extends StatelessWidget {
 
 class _ServiceCard extends StatelessWidget {
   const _ServiceCard({required this.service});
-
   final ProfessionalService service;
-
   @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    service.name,
-                    style: Theme.of(context).textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w700),
-                  ),
+  Widget build(BuildContext context) => Card(
+    margin: EdgeInsets.zero,
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  service.name,
+                  style: Theme.of(context).textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w700),
                 ),
-                Text(
-                  '${service.price.toStringAsFixed(2)} ${service.currency}',
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.schedule, size: 18),
-                const SizedBox(width: 6),
-                Text('${service.durationMinutes} min'),
-                const SizedBox(width: 12),
-                Text(service.priceType),
-              ],
-            ),
-            if (service.description != null &&
-                service.description!.trim().isNotEmpty) ...[
-              const SizedBox(height: 10),
-              Text(service.description!),
+              ),
+              Text(
+                '${service.price.toStringAsFixed(2)} ${service.currency}',
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
             ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.schedule, size: 18),
+              const SizedBox(width: 6),
+              Text(
+                context.l10n.replace('minutes', {
+                  'count': service.durationMinutes,
+                }),
+              ),
+              const SizedBox(width: 12),
+              Text(service.priceType),
+            ],
+          ),
+          if (service.description != null &&
+              service.description!.trim().isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(service.description!),
           ],
-        ),
+        ],
       ),
-    );
-  }
+    ),
+  );
 }
 
 class _ReviewCard extends StatelessWidget {
   const _ReviewCard({required this.review});
-
   final ProfessionalReview review;
-
   @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: List.generate(
-                5,
-                (index) => Icon(
-                  index < review.rating ? Icons.star : Icons.star_border,
-                  size: 20,
-                ),
+  Widget build(BuildContext context) => Card(
+    margin: EdgeInsets.zero,
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: List.generate(
+              5,
+              (index) => Icon(
+                index < review.rating ? Icons.star : Icons.star_border,
+                size: 20,
               ),
             ),
-            if (review.comment != null &&
-                review.comment!.trim().isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(review.comment!),
-            ],
-            if (review.createdAt != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                _formatDate(review.createdAt!),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
+          ),
+          if (review.comment != null && review.comment!.trim().isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(review.comment!),
           ],
-        ),
+          if (review.createdAt != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              _formatDate(review.createdAt!),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ],
       ),
-    );
-  }
-
+    ),
+  );
   String _formatDate(DateTime value) {
     final local = value.toLocal();
-    final month = local.month.toString().padLeft(2, '0');
-    final day = local.day.toString().padLeft(2, '0');
-    return '${local.year}-$month-$day';
+    return '${local.year}-${local.month.toString().padLeft(2, '0')}-${local.day.toString().padLeft(2, '0')}';
   }
 }
 
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle(this.text);
-
   final String text;
-
   @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: Theme.of(context).textTheme.titleLarge
-          ?.copyWith(fontWeight: FontWeight.w800),
-    );
-  }
+  Widget build(BuildContext context) => Text(
+    text,
+    style: Theme.of(context).textTheme.titleLarge
+        ?.copyWith(fontWeight: FontWeight.w800),
+  );
 }
 
 class _EmptyCard extends StatelessWidget {
   const _EmptyCard({required this.icon, required this.text});
-
   final IconData icon;
   final String text;
-
   @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Row(
-          children: [
-            Icon(icon),
-            const SizedBox(width: 12),
-            Expanded(child: Text(text)),
-          ],
-        ),
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(18),
+      child: Row(
+        children: [
+          Icon(icon),
+          const SizedBox(width: 12),
+          Expanded(child: Text(text)),
+        ],
       ),
-    );
-  }
+    ),
+  );
 }

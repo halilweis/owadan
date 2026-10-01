@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/localization/app_localizations.dart';
 import '../../core/network/api_exception.dart';
 import '../discovery/discovery_repository.dart';
 import '../discovery/models/professional_summary.dart';
@@ -13,11 +14,9 @@ class BookingDetailScreen extends StatefulWidget {
     required this.discoveryRepository,
     super.key,
   });
-
   final BookingModel booking;
   final BookingRepository bookingRepository;
   final DiscoveryRepository discoveryRepository;
-
   @override
   State<BookingDetailScreen> createState() => _BookingDetailScreenState();
 }
@@ -49,39 +48,36 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       _booking.status == 'PENDING' || _booking.status == 'CONFIRMED';
 
   Future<void> _cancel() async {
+    final l10n = context.l10n;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Cancel booking?'),
-        content: const Text(
-          'This appointment will be cancelled and the time slot will become available again.',
-        ),
+        title: Text(l10n.t('cancelBookingQuestion')),
+        content: Text(l10n.t('cancelBookingMessage')),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Keep booking'),
+            child: Text(l10n.t('keepBooking')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Cancel booking'),
+            child: Text(l10n.t('cancelBooking')),
           ),
         ],
       ),
     );
-
     if (confirmed != true || !mounted) return;
-
     setState(() {
       _cancelling = true;
       _error = null;
     });
-
     try {
       final updated = await widget.bookingRepository.cancelBooking(_booking.id);
       if (!mounted) return;
       setState(() => _booking = updated);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Booking cancelled.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.t('bookingCancelled'))),
+      );
     } on ApiException catch (error) {
       if (!mounted) return;
       setState(() => _error = error.message);
@@ -92,11 +88,11 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final start = _booking.startsAt.toLocal();
     final end = _booking.endsAt.toLocal();
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Booking details')),
+      appBar: AppBar(title: Text(l10n.t('bookingDetails'))),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
@@ -104,7 +100,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             child: Padding(
               padding: const EdgeInsets.all(18),
               child: Text(
-                _statusLabel(_booking.status),
+                l10n.status(_booking.status),
                 style: Theme.of(context).textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.w800),
               ),
@@ -125,7 +121,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                   const SizedBox(height: 16),
                   _Row(
                     icon: Icons.person_outline,
-                    text: _professional?.displayName ?? 'Professional',
+                    text: _professional?.displayName ?? l10n.t('professional'),
                   ),
                   _Row(icon: Icons.calendar_today_outlined, text: _date(start)),
                   _Row(
@@ -135,7 +131,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                   _Row(
                     icon: Icons.payments_outlined,
                     text: _booking.price == null
-                        ? 'Price on request'
+                        ? l10n.t('priceOnRequest')
                         : '${_booking.price!.toStringAsFixed(2)} ${_booking.currency}',
                   ),
                   if (_booking.note != null && _booking.note!.trim().isNotEmpty)
@@ -161,7 +157,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.cancel_outlined),
-              label: const Text('Cancel booking'),
+              label: Text(l10n.t('cancelBooking')),
             ),
           ],
         ],
@@ -169,41 +165,25 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     );
   }
 
-  String _statusLabel(String status) => switch (status) {
-    'PENDING' => 'Pending confirmation',
-    'CONFIRMED' => 'Confirmed',
-    'DECLINED' => 'Declined',
-    'CANCELLED_BY_CUSTOMER' => 'Cancelled by you',
-    'CANCELLED_BY_PROFESSIONAL' => 'Cancelled by professional',
-    'COMPLETED' => 'Completed',
-    'NO_SHOW' => 'No show',
-    _ => status,
-  };
-
   String _date(DateTime value) =>
       '${value.year}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
-
   String _time(DateTime value) =>
       '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
 }
 
 class _Row extends StatelessWidget {
   const _Row({required this.icon, required this.text});
-
   final IconData icon;
   final String text;
-
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Icon(icon, size: 20),
-          const SizedBox(width: 12),
-          Expanded(child: Text(text)),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Row(
+      children: [
+        Icon(icon, size: 20),
+        const SizedBox(width: 12),
+        Expanded(child: Text(text)),
+      ],
+    ),
+  );
 }

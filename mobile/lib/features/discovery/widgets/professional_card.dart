@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/localization/app_localizations.dart';
 import '../models/professional_summary.dart';
 
 class ProfessionalCard extends StatelessWidget {
@@ -8,13 +9,13 @@ class ProfessionalCard extends StatelessWidget {
     required this.onTap,
     super.key,
   });
-
   final ProfessionalSummary professional;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -52,7 +53,16 @@ class ProfessionalCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 6),
-                    Text(_priceText()),
+                    Text(
+                      professional.minPrice == null
+                          ? l10n.t('priceOnRequest')
+                          : l10n.replace('fromPrice', {
+                              'price': professional.minPrice!.toStringAsFixed(
+                                2,
+                              ),
+                              'currency': professional.currency,
+                            }),
+                    ),
                     const SizedBox(height: 6),
                     Row(
                       children: [
@@ -60,7 +70,7 @@ class ProfessionalCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           professional.averageRating == null
-                              ? 'New'
+                              ? l10n.t('newProfessional')
                               : professional.averageRating!.toStringAsFixed(1),
                         ),
                         const SizedBox(width: 6),
@@ -76,11 +86,6 @@ class ProfessionalCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _priceText() {
-    if (professional.minPrice == null) return 'Price on request';
-    return 'From ${professional.minPrice!.toStringAsFixed(2)} ${professional.currency}';
   }
 
   String _initials(String name) {

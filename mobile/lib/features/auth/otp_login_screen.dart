@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/localization/app_localizations.dart';
 import '../../core/network/api_exception.dart';
 import 'auth_repository.dart';
 import 'otp_verify_screen.dart';
@@ -56,6 +57,7 @@ class _OtpLoginScreenState extends State<OtpLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -75,24 +77,21 @@ class _OtpLoginScreenState extends State<OtpLoginScreen> {
                           ?.copyWith(fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 12),
-                    const Text(
-                      'Beauty services, easier to discover and book.',
-                      textAlign: TextAlign.center,
-                    ),
+                    Text(l10n.t('beautyTagline'), textAlign: TextAlign.center),
                     const SizedBox(height: 40),
                     TextFormField(
                       controller: _phone,
                       keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(
-                        labelText: 'Phone number',
+                      decoration: InputDecoration(
+                        labelText: l10n.t('phoneNumber'),
                         hintText: '+99361123456',
-                        prefixIcon: Icon(Icons.phone_outlined),
+                        prefixIcon: const Icon(Icons.phone_outlined),
                       ),
                       validator: (value) =>
                           RegExp(r'^\+[1-9]\d{7,14}$')
                               .hasMatch(value?.trim() ?? '')
                           ? null
-                          : 'Use international format.',
+                          : l10n.t('useInternationalFormat'),
                     ),
                     if (_error != null) ...[
                       const SizedBox(height: 16),
@@ -108,7 +107,7 @@ class _OtpLoginScreenState extends State<OtpLoginScreen> {
                       onPressed: _loading ? null : _submit,
                       child: _loading
                           ? const CircularProgressIndicator()
-                          : const Text('Continue'),
+                          : Text(l10n.t('continue')),
                     ),
                   ],
                 ),

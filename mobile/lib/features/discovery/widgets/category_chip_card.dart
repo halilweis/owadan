@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/localization/app_localizations.dart';
 import '../models/category_model.dart';
 
 class CategoryChipCard extends StatelessWidget {
@@ -8,14 +9,12 @@ class CategoryChipCard extends StatelessWidget {
     required this.onTap,
     super.key,
   });
-
   final CategoryModel category;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-
     return Material(
       color: scheme.surfaceContainerLowest,
       borderRadius: BorderRadius.circular(20),
@@ -39,7 +38,7 @@ class CategoryChipCard extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                category.displayName(),
+                category.displayName(locale: context.l10n.languageCode),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
