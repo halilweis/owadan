@@ -11,6 +11,7 @@ import 'features/booking/booking_repository.dart';
 import 'features/discovery/discovery_repository.dart';
 import 'features/home/home_screen.dart';
 import 'features/profile/profile_repository.dart';
+import 'core/localization/api_error_messages.dart';
 
 class OwadanApp extends StatefulWidget {
   const OwadanApp({super.key});
@@ -39,6 +40,7 @@ class _OwadanAppState extends State<OwadanApp> {
         WidgetsBinding.instance.platformDispatcher.locale.languageCode;
     if (AppLocalizations.supports(systemCode)) {
       _locale = Locale(systemCode);
+      ApiErrorMessages.setLanguage(_locale.languageCode);
     }
 
     _tokenStorage = const TokenStorage();
@@ -96,11 +98,14 @@ class _OwadanAppState extends State<OwadanApp> {
   }
 
   void _setLocale(String languageCode, {bool rebuild = true}) {
-    final normalized = AppLocalizations.supports(languageCode)
-        ? languageCode
-        : 'en';
+    final normalized =
+        AppLocalizations.supports(languageCode) ? languageCode : 'en';
 
-    if (_locale.languageCode == normalized) return;
+    ApiErrorMessages.setLanguage(normalized);
+
+    if (_locale.languageCode == normalized) {
+      return;
+    }
 
     if (rebuild && mounted) {
       setState(() {
