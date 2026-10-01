@@ -13,6 +13,8 @@ import '../discovery/professional_list_screen.dart';
 import '../discovery/widgets/category_chip_card.dart';
 import '../discovery/widgets/professional_card.dart';
 import '../favorites/favorites_screen.dart';
+import '../notifications/notification_repository.dart';
+import '../notifications/notifications_screen.dart';
 import '../profile/profile_repository.dart';
 import '../profile/profile_screen.dart';
 
@@ -22,6 +24,7 @@ class HomeScreen extends StatefulWidget {
     required this.discoveryRepository,
     required this.bookingRepository,
     required this.profileRepository,
+    required this.notificationRepository,
     required this.onSignedOut,
     required this.onLanguageChanged,
     super.key,
@@ -31,6 +34,7 @@ class HomeScreen extends StatefulWidget {
   final DiscoveryRepository discoveryRepository;
   final BookingRepository bookingRepository;
   final ProfileRepository profileRepository;
+  final NotificationRepository notificationRepository;
   final VoidCallback onSignedOut;
   final ValueChanged<String> onLanguageChanged;
 
@@ -44,11 +48,13 @@ class _HomeScreenState extends State<HomeScreen> {
   List<CategoryModel> _categories = const [];
   List<ProfessionalSummary> _professionals = const [];
   int _selectedIndex = 0;
+  int _unreadNotifications = 0;
 
   @override
   void initState() {
     super.initState();
     _loadHome();
+    _loadUnreadCount();
   }
 
   Future<void> _loadHome() async {
@@ -62,20 +68,75 @@ class _HomeScreenState extends State<HomeScreen> {
       final professionalsFuture = widget.discoveryRepository.fetchProfessionals(
         size: 6,
       );
+
       final categories = await categoriesFuture;
       final professionalsPage = await professionalsFuture;
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
+
       setState(() {
         _categories = categories;
         _professionals = professionalsPage.items;
       });
     } on ApiException catch (error) {
-      if (!mounted) return;
-      setState(() => _error = error.message);
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _error = error.message;
+      });
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
     }
+  }
+
+  Future<void> _loadUnreadCount() async {
+    try {
+      final count = await widget.notificationRepository.fetchUnreadCount();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _unreadNotifications = count;
+      });
+    } on ApiException {
+      // Notification count is non-critical for the home screen.
+    }
+  }
+
+  Future<void> _openNotifications() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => NotificationsScreen(
+          repository: widget.notificationRepository,
+          onUnreadCountChanged: (count) {
+            if (mounted) {
+              setState(() {
+                _unreadNotifications = count;
+              });
+            }
+          },
+          onOpenBookings: () {
+            if (mounted) {
+              setState(() {
+                _selectedIndex = 2;
+              });
+            }
+          },
+        ),
+      ),
+    );
+
+    await _loadUnreadCount();
   }
 
   @override
@@ -106,8 +167,11 @@ class _HomeScreenState extends State<HomeScreen> {
       },
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
-        onDestinationSelected: (index) =>
-            setState(() => _selectedIndex = index),
+        onDestinationSelected: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
         destinations: [
           NavigationDestination(
             icon: const Icon(Icons.home_outlined),
@@ -141,9 +205,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildHome() {
     final l10n = context.l10n;
+
     return SafeArea(
       child: RefreshIndicator(
-        onRefresh: _loadHome,
+        onRefresh: () async {
+          await Future.wait([_loadHome(), _loadUnreadCount()]);
+        },
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
           children: [
@@ -158,8 +225,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 IconButton(
                   tooltip: l10n.t('notifications'),
-                  onPressed: () {},
-                  icon: const Icon(Icons.notifications_none),
+                  onPressed: _openNotifications,
+                  icon: Badge(
+                    isLabelVisible: _unreadNotifications > 0,
+                    label: Text(
+                      _unreadNotifications > 99
+                          ? '99+'
+                          : '$_unreadNotifications',
+                    ),
+                    child: const Icon(Icons.notifications_none),
+                  ),
                 ),
               ],
             ),
@@ -175,7 +250,11 @@ class _HomeScreenState extends State<HomeScreen> {
             SearchBar(
               hintText: l10n.t('searchProfessionals'),
               leading: const Icon(Icons.search),
-              onTap: () => setState(() => _selectedIndex = 1),
+              onTap: () {
+                setState(() {
+                  _selectedIndex = 1;
+                });
+              },
             ),
             const SizedBox(height: 28),
             _sectionHeader(
@@ -214,6 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   separatorBuilder: (_, _) => const SizedBox(width: 12),
                   itemBuilder: (context, index) {
                     final category = _categories[index];
+
                     return CategoryChipCard(
                       category: category,
                       onTap: () {
@@ -235,7 +315,11 @@ class _HomeScreenState extends State<HomeScreen> {
             _sectionHeader(
               title: l10n.t('recommendedProfessionals'),
               actionText: l10n.t('explore'),
-              onAction: () => setState(() => _selectedIndex = 1),
+              onAction: () {
+                setState(() {
+                  _selectedIndex = 1;
+                });
+              },
             ),
             const SizedBox(height: 14),
             if (!_loading && _professionals.isEmpty && _error == null)
@@ -291,46 +375,54 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class _ErrorCard extends StatelessWidget {
   const _ErrorCard({required this.message, required this.onRetry});
+
   final String message;
   final VoidCallback onRetry;
+
   @override
-  Widget build(BuildContext context) => Card(
-    child: Padding(
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        children: [
-          Icon(
-            Icons.cloud_off_outlined,
-            color: Theme.of(context).colorScheme.error,
-          ),
-          const SizedBox(height: 8),
-          Text(message, textAlign: TextAlign.center),
-          const SizedBox(height: 8),
-          TextButton(
-            onPressed: onRetry,
-            child: Text(context.l10n.t('tryAgain')),
-          ),
-        ],
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          children: [
+            Icon(
+              Icons.cloud_off_outlined,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            const SizedBox(height: 8),
+            Text(message, textAlign: TextAlign.center),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: onRetry,
+              child: Text(context.l10n.t('tryAgain')),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _EmptyCard extends StatelessWidget {
   const _EmptyCard({required this.icon, required this.message});
+
   final IconData icon;
   final String message;
+
   @override
-  Widget build(BuildContext context) => Card(
-    child: Padding(
-      padding: const EdgeInsets.all(18),
-      child: Row(
-        children: [
-          Icon(icon),
-          const SizedBox(width: 12),
-          Expanded(child: Text(message)),
-        ],
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Row(
+          children: [
+            Icon(icon),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }

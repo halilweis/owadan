@@ -12,10 +12,7 @@ class ApiException implements Exception {
   final int? statusCode;
 
   String get message {
-    return ApiErrorMessages.translate(
-      code,
-      fallback: serverMessage,
-    );
+    return ApiErrorMessages.translate(code, fallback: serverMessage);
   }
 
   @override

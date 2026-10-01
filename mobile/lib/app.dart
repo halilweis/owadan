@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'core/localization/api_error_messages.dart';
 import 'core/localization/app_localizations.dart';
 import 'core/network/api_client.dart';
 import 'core/storage/token_storage.dart';
@@ -10,8 +11,8 @@ import 'features/auth/otp_login_screen.dart';
 import 'features/booking/booking_repository.dart';
 import 'features/discovery/discovery_repository.dart';
 import 'features/home/home_screen.dart';
+import 'features/notifications/notification_repository.dart';
 import 'features/profile/profile_repository.dart';
-import 'core/localization/api_error_messages.dart';
 
 class OwadanApp extends StatefulWidget {
   const OwadanApp({super.key});
@@ -27,6 +28,7 @@ class _OwadanAppState extends State<OwadanApp> {
   late final DiscoveryRepository _discoveryRepository;
   late final BookingRepository _bookingRepository;
   late final ProfileRepository _profileRepository;
+  late final NotificationRepository _notificationRepository;
 
   bool _loading = true;
   bool _authenticated = false;
@@ -38,10 +40,12 @@ class _OwadanAppState extends State<OwadanApp> {
 
     final systemCode =
         WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+
     if (AppLocalizations.supports(systemCode)) {
       _locale = Locale(systemCode);
-      ApiErrorMessages.setLanguage(_locale.languageCode);
     }
+
+    ApiErrorMessages.setLanguage(_locale.languageCode);
 
     _tokenStorage = const TokenStorage();
     _apiClient = ApiClient(_tokenStorage);
@@ -49,6 +53,7 @@ class _OwadanAppState extends State<OwadanApp> {
     _discoveryRepository = DiscoveryRepository(_apiClient);
     _bookingRepository = BookingRepository(_apiClient);
     _profileRepository = ProfileRepository(_apiClient);
+    _notificationRepository = NotificationRepository(_apiClient);
 
     _restoreSession();
   }
@@ -65,7 +70,9 @@ class _OwadanAppState extends State<OwadanApp> {
       await _loadPreferredLocale();
     }
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     setState(() {
       _authenticated = authenticated;
@@ -86,8 +93,11 @@ class _OwadanAppState extends State<OwadanApp> {
     setState(() {
       _authenticated = true;
     });
+
     _loadPreferredLocale().then((_) {
-      if (mounted) setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
     });
   }
 
@@ -98,8 +108,9 @@ class _OwadanAppState extends State<OwadanApp> {
   }
 
   void _setLocale(String languageCode, {bool rebuild = true}) {
-    final normalized =
-        AppLocalizations.supports(languageCode) ? languageCode : 'en';
+    final normalized = AppLocalizations.supports(languageCode)
+        ? languageCode
+        : 'en';
 
     ApiErrorMessages.setLanguage(normalized);
 
@@ -126,13 +137,8 @@ class _OwadanAppState extends State<OwadanApp> {
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
         AppLocalizations.delegate,
-
-        // Flutter does not currently provide built-in Material/Cupertino
-        // localizations for Turkmen. These delegates provide framework
-        // fallbacks while Owadan's own text remains Turkmen.
         TurkmenMaterialLocalizationsDelegate(),
         TurkmenCupertinoLocalizationsDelegate(),
-
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
@@ -145,6 +151,7 @@ class _OwadanAppState extends State<OwadanApp> {
               discoveryRepository: _discoveryRepository,
               bookingRepository: _bookingRepository,
               profileRepository: _profileRepository,
+              notificationRepository: _notificationRepository,
               onSignedOut: _signedOut,
               onLanguageChanged: _setLocale,
             )
