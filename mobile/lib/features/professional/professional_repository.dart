@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../core/network/api_client.dart';
 import 'models/pro_booking.dart';
+import 'models/working_hours_item.dart';
 
 class ProfessionalRepository {
   ProfessionalRepository(this._apiClient);
@@ -32,6 +33,46 @@ class ProfessionalRepository {
             ),
           )
           .toList();
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
+
+  Future<List<WorkingHoursItem>> fetchWorkingHours() async {
+    try {
+      final response = await _apiClient.dio.get<Map<String, dynamic>>(
+        '/api/v1/pro/working-hours',
+      );
+
+      final data = response.data?['data'];
+      if (data is! Map<String, dynamic>) {
+        return const [];
+      }
+
+      final raw = data['items'];
+      if (raw is! List) {
+        return const [];
+      }
+
+      return raw
+          .whereType<Map>()
+          .map(
+            (item) => WorkingHoursItem.fromJson(
+              item.map((key, value) => MapEntry(key.toString(), value)),
+            ),
+          )
+          .toList();
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
+
+  Future<void> saveWorkingHours(List<WorkingHoursItem> items) async {
+    try {
+      await _apiClient.dio.put<Map<String, dynamic>>(
+        '/api/v1/pro/working-hours',
+        data: {'items': items.map((item) => item.toJson()).toList()},
+      );
     } on DioException catch (error) {
       throw ApiClient.mapError(error);
     }

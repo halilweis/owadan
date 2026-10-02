@@ -83,6 +83,51 @@ final class ProfessionalAvailabilityController extends AbstractController
         ], 201);
     }
 
+    #[Route('/api/v1/pro/working-hours', methods: ['GET'])]
+    public function workingHours(
+        ProfessionalProfileRepository $profiles,
+        EntityManagerInterface $entityManager,
+    ): JsonResponse {
+        $user = $this->getUser();
+
+        if (!$user instanceof User) {
+            return $this->json(['error' => ['code' => 'UNAUTHENTICATED']], 401);
+        }
+
+        $profile = $profiles->findOneByUser($user);
+
+        if (!$profile instanceof ProfessionalProfile) {
+            return $this->json(['error' => ['code' => 'PROFILE_REQUIRED']], 409);
+        }
+
+        $hours = $entityManager
+            ->getRepository(WorkingHours::class)
+            ->findBy(
+                [
+                    'professional' => $profile,
+                    'active' => true,
+                ],
+                [
+                    'dayOfWeek' => 'ASC',
+                    'startTime' => 'ASC',
+                ],
+            );
+
+        return $this->json([
+            'data' => [
+                'items' => array_map(
+                    static fn (WorkingHours $item): array => [
+                        'id' => $item->getId()->toRfc4122(),
+                        'dayOfWeek' => $item->getDayOfWeek(),
+                        'startTime' => $item->getStartTime(),
+                        'endTime' => $item->getEndTime(),
+                    ],
+                    $hours,
+                ),
+            ],
+        ]);
+    }
+
     #[Route('/api/v1/pro/working-hours', methods: ['PUT'])]
     public function setWorkingHours(
         Request $request,
@@ -105,7 +150,65 @@ final class ProfessionalAvailabilityController extends AbstractController
         $items = $payload['items'] ?? null;
 
         if (!is_array($items)) {
-            return $this->json(['error' => ['code' => 'VALIDATION_ERROR', 'message' => 'items must be an array.']], 422);
+            return $this->json([
+                'error' => [
+                    'code' => 'VALIDATION_ERROR',
+                    'message' => 'items must be an array.',
+                ],
+            ], 422);
+        }
+
+        $validated = [];
+
+        foreach ($items as $item) {
+            if (!is_array($item)) {
+                return $this->json([
+                    'error' => [
+                        'code' => 'VALIDATION_ERROR',
+                        'message' => 'Each working-hours item must be an object.',
+                    ],
+                ], 422);
+            }
+
+            $dayOfWeek = (int) ($item['dayOfWeek'] ?? 0);
+            $startTime = (string) ($item['startTime'] ?? '');
+            $endTime = (string) ($item['endTime'] ?? '');
+
+            if ($dayOfWeek < 1 || $dayOfWeek > 7) {
+                return $this->json([
+                    'error' => [
+                        'code' => 'VALIDATION_ERROR',
+                        'message' => 'dayOfWeek must be between 1 and 7.',
+                    ],
+                ], 422);
+            }
+
+            if (
+                !preg_match('/^\d{2}:\d{2}$/', $startTime)
+                || !preg_match('/^\d{2}:\d{2}$/', $endTime)
+            ) {
+                return $this->json([
+                    'error' => [
+                        'code' => 'VALIDATION_ERROR',
+                        'message' => 'startTime and endTime must use HH:MM format.',
+                    ],
+                ], 422);
+            }
+
+            if ($startTime >= $endTime) {
+                return $this->json([
+                    'error' => [
+                        'code' => 'VALIDATION_ERROR',
+                        'message' => 'startTime must be before endTime.',
+                    ],
+                ], 422);
+            }
+
+            $validated[] = [
+                'dayOfWeek' => $dayOfWeek,
+                'startTime' => $startTime,
+                'endTime' => $endTime,
+            ];
         }
 
         $entityManager->createQueryBuilder()
@@ -115,28 +218,12 @@ final class ProfessionalAvailabilityController extends AbstractController
             ->getQuery()
             ->execute();
 
-        foreach ($items as $item) {
-            $dayOfWeek = (int) ($item['dayOfWeek'] ?? 0);
-            $startTime = (string) ($item['startTime'] ?? '');
-            $endTime = (string) ($item['endTime'] ?? '');
-
-            if ($dayOfWeek < 1 || $dayOfWeek > 7) {
-                return $this->json(['error' => ['code' => 'VALIDATION_ERROR', 'message' => 'dayOfWeek must be between 1 and 7.']], 422);
-            }
-
-            if (!preg_match('/^\d{2}:\d{2}$/', $startTime) || !preg_match('/^\d{2}:\d{2}$/', $endTime)) {
-                return $this->json(['error' => ['code' => 'VALIDATION_ERROR', 'message' => 'startTime and endTime must use HH:MM format.']], 422);
-            }
-
-            if ($startTime >= $endTime) {
-                return $this->json(['error' => ['code' => 'VALIDATION_ERROR', 'message' => 'startTime must be before endTime.']], 422);
-            }
-
+        foreach ($validated as $item) {
             $hours = new WorkingHours(
                 $profile,
-                $dayOfWeek,
-                $startTime,
-                $endTime,
+                $item['dayOfWeek'],
+                $item['startTime'],
+                $item['endTime'],
             );
 
             $entityManager->persist($hours);
@@ -144,7 +231,12 @@ final class ProfessionalAvailabilityController extends AbstractController
 
         $entityManager->flush();
 
-        return $this->json(['data' => ['updated' => true]]);
+        return $this->json([
+            'data' => [
+                'updated' => true,
+                'items' => $validated,
+            ],
+        ]);
     }
 
     #[Route('/api/v1/pro/availability-exceptions', methods: ['POST'])]

@@ -4,6 +4,7 @@ import '../../core/localization/app_localizations.dart';
 import '../../core/network/api_exception.dart';
 import 'models/pro_booking.dart';
 import 'professional_repository.dart';
+import 'working_hours_screen.dart';
 
 class ProfessionalWorkspaceScreen extends StatefulWidget {
   const ProfessionalWorkspaceScreen({required this.repository, super.key});
@@ -86,24 +87,51 @@ class _ProfessionalWorkspaceScreenState
     }
   }
 
+  Future<void> _openWorkingHours() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => WorkingHoursScreen(repository: widget.repository),
+      ),
+    );
+  }
+
+  String _text({required String en, required String ru, required String tk}) {
+    return switch (Localizations.localeOf(context).languageCode) {
+      'tk' => tk,
+      'ru' => ru,
+      _ => en,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
-    final language = Localizations.localeOf(context).languageCode;
+    final title = _text(
+      en: 'Professional workspace',
+      ru: 'Кабинет специалиста',
+      tk: 'Hünärmen paneli',
+    );
 
-    final title = switch (language) {
-      'tk' => 'Hünärmen paneli',
-      'ru' => 'Кабинет специалиста',
-      _ => 'Professional workspace',
-    };
-
-    final empty = switch (language) {
-      'tk' => 'Häzirlikçe ýazgy ýok.',
-      'ru' => 'Записей пока нет.',
-      _ => 'No bookings yet.',
-    };
+    final empty = _text(
+      en: 'No bookings yet.',
+      ru: 'Записей пока нет.',
+      tk: 'Häzirlikçe ýazgy ýok.',
+    );
 
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(
+        title: Text(title),
+        actions: [
+          IconButton(
+            tooltip: _text(
+              en: 'Working hours',
+              ru: 'Рабочие часы',
+              tk: 'Iş wagtlary',
+            ),
+            onPressed: _openWorkingHours,
+            icon: const Icon(Icons.schedule_outlined),
+          ),
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: _loading
