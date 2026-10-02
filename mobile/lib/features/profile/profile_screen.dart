@@ -6,11 +6,14 @@ import '../auth/auth_repository.dart';
 import 'edit_profile_screen.dart';
 import 'models/account_user.dart';
 import 'profile_repository.dart';
+import '../professional/professional_repository.dart';
+import '../professional/professional_workspace_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({
     required this.profileRepository,
     required this.authRepository,
+    required this.professionalRepository,
     required this.onSignedOut,
     required this.onLanguageChanged,
     super.key,
@@ -18,6 +21,7 @@ class ProfileScreen extends StatefulWidget {
 
   final ProfileRepository profileRepository;
   final AuthRepository authRepository;
+  final ProfessionalRepository professionalRepository;
   final VoidCallback onSignedOut;
   final ValueChanged<String> onLanguageChanged;
 
@@ -214,6 +218,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
           title: l10n.t('accountType'),
           subtitle: _accountType(user),
         ),
+        if (user.isProfessional) ...[
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => ProfessionalWorkspaceScreen(
+                    repository: widget.professionalRepository,
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.work_outline),
+            label: Text(
+              Localizations.localeOf(context).languageCode == 'tk'
+                  ? 'Hünärmen paneli'
+                  : Localizations.localeOf(context).languageCode == 'ru'
+                  ? 'Кабинет специалиста'
+                  : 'Professional workspace',
+            ),
+          ),
+        ],
         const SizedBox(height: 24),
         Text(
           l10n.t('session'),

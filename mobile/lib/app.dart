@@ -13,6 +13,7 @@ import 'features/discovery/discovery_repository.dart';
 import 'features/home/home_screen.dart';
 import 'features/notifications/notification_repository.dart';
 import 'features/profile/profile_repository.dart';
+import 'features/professional/professional_repository.dart';
 
 class OwadanApp extends StatefulWidget {
   const OwadanApp({super.key});
@@ -29,6 +30,7 @@ class _OwadanAppState extends State<OwadanApp> {
   late final BookingRepository _bookingRepository;
   late final ProfileRepository _profileRepository;
   late final NotificationRepository _notificationRepository;
+  late final ProfessionalRepository _professionalRepository;
 
   bool _loading = true;
   bool _authenticated = false;
@@ -54,6 +56,7 @@ class _OwadanAppState extends State<OwadanApp> {
     _bookingRepository = BookingRepository(_apiClient);
     _profileRepository = ProfileRepository(_apiClient);
     _notificationRepository = NotificationRepository(_apiClient);
+    _professionalRepository = ProfessionalRepository(_apiClient);
 
     _restoreSession();
   }
@@ -84,9 +87,7 @@ class _OwadanAppState extends State<OwadanApp> {
     try {
       final user = await _profileRepository.fetchMe();
       _setLocale(user.preferredLanguage, rebuild: false);
-    } catch (_) {
-      // Keep the current/system locale if the profile cannot be loaded yet.
-    }
+    } catch (_) {}
   }
 
   void _signedIn() {
@@ -152,6 +153,7 @@ class _OwadanAppState extends State<OwadanApp> {
               bookingRepository: _bookingRepository,
               profileRepository: _profileRepository,
               notificationRepository: _notificationRepository,
+              professionalRepository: _professionalRepository,
               onSignedOut: _signedOut,
               onLanguageChanged: _setLocale,
             )

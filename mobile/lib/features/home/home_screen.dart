@@ -17,6 +17,7 @@ import '../notifications/notification_repository.dart';
 import '../notifications/notifications_screen.dart';
 import '../profile/profile_repository.dart';
 import '../profile/profile_screen.dart';
+import '../professional/professional_repository.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -25,6 +26,7 @@ class HomeScreen extends StatefulWidget {
     required this.bookingRepository,
     required this.profileRepository,
     required this.notificationRepository,
+    required this.professionalRepository,
     required this.onSignedOut,
     required this.onLanguageChanged,
     super.key,
@@ -35,6 +37,7 @@ class HomeScreen extends StatefulWidget {
   final BookingRepository bookingRepository;
   final ProfileRepository profileRepository;
   final NotificationRepository notificationRepository;
+  final ProfessionalRepository professionalRepository;
   final VoidCallback onSignedOut;
   final ValueChanged<String> onLanguageChanged;
 
@@ -161,6 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _ => ProfileScreen(
           profileRepository: widget.profileRepository,
           authRepository: widget.authRepository,
+          professionalRepository: widget.professionalRepository,
           onSignedOut: widget.onSignedOut,
           onLanguageChanged: widget.onLanguageChanged,
         ),
