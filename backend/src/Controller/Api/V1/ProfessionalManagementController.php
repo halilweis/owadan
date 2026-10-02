@@ -129,6 +129,42 @@ final class ProfessionalManagementController extends AbstractController
         return $this->json(['data' => ['profile' => $this->profilePayload($profile)]]);
     }
 
+    #[Route('/api/v1/pro/services', methods: ['GET'])]
+    public function services(
+        ProfessionalProfileRepository $profiles,
+        ProfessionalServiceRepository $services,
+    ): JsonResponse {
+        $user = $this->requireUser();
+        if (!$user instanceof User) {
+            return $this->unauthenticated();
+        }
+
+        $profile = $profiles->findOneByUser($user);
+        if (!$profile instanceof ProfessionalProfile) {
+            return $this->json([
+                'error' => [
+                    'code' => 'PROFILE_REQUIRED',
+                    'message' => 'Create your professional profile first.',
+                ],
+            ], 409);
+        }
+
+        $items = $services->findBy(
+            ['professional' => $profile],
+            ['createdAt' => 'DESC'],
+        );
+
+        return $this->json([
+            'data' => [
+                'services' => array_map(
+                    fn (ProfessionalService $service): array =>
+                        $this->servicePayload($service),
+                    $items,
+                ),
+            ],
+        ]);
+    }
+
     #[Route('/api/v1/pro/services', methods: ['POST'])]
     public function createService(
         Request $request,

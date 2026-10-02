@@ -1,8 +1,10 @@
 import 'package:dio/dio.dart';
 
 import '../../core/network/api_client.dart';
+import '../discovery/models/category_model.dart';
 import 'models/availability_exception_item.dart';
 import 'models/pro_booking.dart';
+import 'models/pro_service.dart';
 import 'models/working_hours_item.dart';
 
 class ProfessionalRepository {
@@ -15,16 +17,10 @@ class ProfessionalRepository {
       final response = await _apiClient.dio.get<Map<String, dynamic>>(
         '/api/v1/pro/bookings',
       );
-
       final data = response.data?['data'];
-      if (data is! Map<String, dynamic>) {
-        return const [];
-      }
-
+      if (data is! Map<String, dynamic>) return const [];
       final raw = data['bookings'];
-      if (raw is! List) {
-        return const [];
-      }
+      if (raw is! List) return const [];
 
       return raw
           .whereType<Map>()
@@ -44,16 +40,10 @@ class ProfessionalRepository {
       final response = await _apiClient.dio.get<Map<String, dynamic>>(
         '/api/v1/pro/working-hours',
       );
-
       final data = response.data?['data'];
-      if (data is! Map<String, dynamic>) {
-        return const [];
-      }
-
+      if (data is! Map<String, dynamic>) return const [];
       final raw = data['items'];
-      if (raw is! List) {
-        return const [];
-      }
+      if (raw is! List) return const [];
 
       return raw
           .whereType<Map>()
@@ -84,16 +74,10 @@ class ProfessionalRepository {
       final response = await _apiClient.dio.get<Map<String, dynamic>>(
         '/api/v1/pro/availability-exceptions',
       );
-
       final data = response.data?['data'];
-      if (data is! Map<String, dynamic>) {
-        return const [];
-      }
-
+      if (data is! Map<String, dynamic>) return const [];
       final raw = data['items'];
-      if (raw is! List) {
-        return const [];
-      }
+      if (raw is! List) return const [];
 
       return raw
           .whereType<Map>()
@@ -132,7 +116,6 @@ class ProfessionalRepository {
       if (data is! Map<String, dynamic>) {
         throw StateError('Invalid availability exception response.');
       }
-
       final raw = data['availabilityException'];
       if (raw is! Map<String, dynamic>) {
         throw StateError('Invalid availability exception response.');
@@ -152,6 +135,136 @@ class ProfessionalRepository {
     } on DioException catch (error) {
       throw ApiClient.mapError(error);
     }
+  }
+
+  Future<List<CategoryModel>> fetchCategories() async {
+    try {
+      final response = await _apiClient.dio.get<Map<String, dynamic>>(
+        '/api/v1/categories',
+      );
+      final raw = response.data?['data'];
+      if (raw is! List) return const [];
+
+      return raw
+          .whereType<Map<String, dynamic>>()
+          .map(CategoryModel.fromJson)
+          .toList();
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
+
+  Future<List<ProService>> fetchServices() async {
+    try {
+      final response = await _apiClient.dio.get<Map<String, dynamic>>(
+        '/api/v1/pro/services',
+      );
+      final data = response.data?['data'];
+      if (data is! Map<String, dynamic>) return const [];
+      final raw = data['services'];
+      if (raw is! List) return const [];
+
+      return raw
+          .whereType<Map<String, dynamic>>()
+          .map(ProService.fromJson)
+          .toList();
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
+
+  Future<ProService> createService({
+    required int categoryId,
+    required String name,
+    required int durationMinutes,
+    required String priceType,
+    required double? price,
+    required bool active,
+    String? description,
+  }) async {
+    try {
+      final response = await _apiClient.dio.post<Map<String, dynamic>>(
+        '/api/v1/pro/services',
+        data: _servicePayload(
+          categoryId: categoryId,
+          name: name,
+          description: description,
+          durationMinutes: durationMinutes,
+          priceType: priceType,
+          price: price,
+          active: active,
+        ),
+      );
+
+      return _parseServiceResponse(response);
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
+
+  Future<ProService> updateService({
+    required String id,
+    required int categoryId,
+    required String name,
+    required int durationMinutes,
+    required String priceType,
+    required double? price,
+    required bool active,
+    String? description,
+  }) async {
+    try {
+      final response = await _apiClient.dio.put<Map<String, dynamic>>(
+        '/api/v1/pro/services/$id',
+        data: _servicePayload(
+          categoryId: categoryId,
+          name: name,
+          description: description,
+          durationMinutes: durationMinutes,
+          priceType: priceType,
+          price: price,
+          active: active,
+        ),
+      );
+
+      return _parseServiceResponse(response);
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
+
+  Map<String, dynamic> _servicePayload({
+    required int categoryId,
+    required String name,
+    required int durationMinutes,
+    required String priceType,
+    required double? price,
+    required bool active,
+    String? description,
+  }) {
+    final trimmedDescription = description?.trim();
+
+    return {
+      'categoryId': categoryId,
+      'name': name.trim(),
+      'durationMinutes': durationMinutes,
+      'priceType': priceType,
+      'price': priceType == 'ON_REQUEST' ? null : price?.toStringAsFixed(2),
+      'active': active,
+      if (trimmedDescription != null && trimmedDescription.isNotEmpty)
+        'description': trimmedDescription,
+    };
+  }
+
+  ProService _parseServiceResponse(Response<Map<String, dynamic>> response) {
+    final data = response.data?['data'];
+    if (data is! Map<String, dynamic>) {
+      throw StateError('Invalid service response.');
+    }
+    final raw = data['service'];
+    if (raw is! Map<String, dynamic>) {
+      throw StateError('Invalid service response.');
+    }
+    return ProService.fromJson(raw);
   }
 
   Future<ProBooking> confirm(String bookingId) =>
@@ -179,7 +292,6 @@ class ProfessionalRepository {
       if (data is! Map<String, dynamic>) {
         throw StateError('Invalid professional booking response.');
       }
-
       final booking = data['booking'];
       if (booking is! Map<String, dynamic>) {
         throw StateError('Invalid professional booking response.');

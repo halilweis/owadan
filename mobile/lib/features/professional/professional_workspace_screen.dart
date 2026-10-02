@@ -5,6 +5,7 @@ import '../../core/network/api_exception.dart';
 import 'availability_exceptions_screen.dart';
 import 'models/pro_booking.dart';
 import 'professional_repository.dart';
+import 'service_management_screen.dart';
 import 'working_hours_screen.dart';
 
 class ProfessionalWorkspaceScreen extends StatefulWidget {
@@ -114,6 +115,18 @@ class _ProfessionalWorkspaceScreenState
       appBar: AppBar(
         title: Text(title),
         actions: [
+          IconButton(
+            tooltip: _text(en: 'Services', ru: 'Услуги', tk: 'Hyzmatlar'),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) =>
+                      ServiceManagementScreen(repository: widget.repository),
+                ),
+              );
+            },
+            icon: const Icon(Icons.design_services_outlined),
+          ),
           IconButton(
             tooltip: _text(
               en: 'Availability exceptions',
