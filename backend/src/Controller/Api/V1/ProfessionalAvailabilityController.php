@@ -239,6 +239,46 @@ final class ProfessionalAvailabilityController extends AbstractController
         ]);
     }
 
+    #[Route('/api/v1/pro/availability-exceptions', methods: ['GET'])]
+    public function availabilityExceptions(
+        ProfessionalProfileRepository $profiles,
+        EntityManagerInterface $entityManager,
+    ): JsonResponse {
+        $user = $this->getUser();
+
+        if (!$user instanceof User) {
+            return $this->json(['error' => ['code' => 'UNAUTHENTICATED']], 401);
+        }
+
+        $profile = $profiles->findOneByUser($user);
+
+        if (!$profile instanceof ProfessionalProfile) {
+            return $this->json(['error' => ['code' => 'PROFILE_REQUIRED']], 409);
+        }
+
+        $items = $entityManager
+            ->getRepository(AvailabilityException::class)
+            ->findBy(
+                ['professional' => $profile],
+                ['startsAt' => 'ASC'],
+            );
+
+        return $this->json([
+            'data' => [
+                'items' => array_map(
+                    static fn (AvailabilityException $item): array => [
+                        'id' => $item->getId()->toRfc4122(),
+                        'startsAt' => $item->getStartsAt()->format(DATE_ATOM),
+                        'endsAt' => $item->getEndsAt()->format(DATE_ATOM),
+                        'type' => $item->getType(),
+                        'note' => $item->getNote(),
+                    ],
+                    $items,
+                ),
+            ],
+        ]);
+    }
+
     #[Route('/api/v1/pro/availability-exceptions', methods: ['POST'])]
     public function createAvailabilityException(
         Request $request,
@@ -298,5 +338,44 @@ final class ProfessionalAvailabilityController extends AbstractController
                 ],
             ],
         ], 201);
+    }
+
+    #[Route('/api/v1/pro/availability-exceptions/{id}', methods: ['DELETE'])]
+    public function deleteAvailabilityException(
+        string $id,
+        ProfessionalProfileRepository $profiles,
+        EntityManagerInterface $entityManager,
+    ): JsonResponse {
+        $user = $this->getUser();
+
+        if (!$user instanceof User) {
+            return $this->json(['error' => ['code' => 'UNAUTHENTICATED']], 401);
+        }
+
+        $profile = $profiles->findOneByUser($user);
+        $exception = $entityManager->find(AvailabilityException::class, $id);
+
+        if (
+            !$profile instanceof ProfessionalProfile
+            || !$exception instanceof AvailabilityException
+            || $exception->getProfessional()->getId()->toRfc4122()
+                !== $profile->getId()->toRfc4122()
+        ) {
+            return $this->json([
+                'error' => [
+                    'code' => 'NOT_FOUND',
+                    'message' => 'Availability exception not found.',
+                ],
+            ], 404);
+        }
+
+        $entityManager->remove($exception);
+        $entityManager->flush();
+
+        return $this->json([
+            'data' => [
+                'deleted' => true,
+            ],
+        ]);
     }
 }

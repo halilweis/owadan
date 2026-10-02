@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/localization/app_localizations.dart';
 import '../../core/network/api_exception.dart';
+import 'availability_exceptions_screen.dart';
 import 'models/pro_booking.dart';
 import 'professional_repository.dart';
 import 'working_hours_screen.dart';
@@ -87,14 +88,6 @@ class _ProfessionalWorkspaceScreenState
     }
   }
 
-  Future<void> _openWorkingHours() async {
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (_) => WorkingHoursScreen(repository: widget.repository),
-      ),
-    );
-  }
-
   String _text({required String en, required String ru, required String tk}) {
     return switch (Localizations.localeOf(context).languageCode) {
       'tk' => tk,
@@ -123,11 +116,35 @@ class _ProfessionalWorkspaceScreenState
         actions: [
           IconButton(
             tooltip: _text(
+              en: 'Availability exceptions',
+              ru: 'Исключения доступности',
+              tk: 'Elýeterlilik kadadan çykmalary',
+            ),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => AvailabilityExceptionsScreen(
+                    repository: widget.repository,
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.event_busy_outlined),
+          ),
+          IconButton(
+            tooltip: _text(
               en: 'Working hours',
               ru: 'Рабочие часы',
               tk: 'Iş wagtlary',
             ),
-            onPressed: _openWorkingHours,
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) =>
+                      WorkingHoursScreen(repository: widget.repository),
+                ),
+              );
+            },
             icon: const Icon(Icons.schedule_outlined),
           ),
         ],
