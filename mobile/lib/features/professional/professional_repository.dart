@@ -4,6 +4,7 @@ import '../../core/network/api_client.dart';
 import '../discovery/models/category_model.dart';
 import 'models/availability_exception_item.dart';
 import 'models/pro_booking.dart';
+import 'models/pro_profile.dart';
 import 'models/pro_service.dart';
 import 'models/working_hours_item.dart';
 
@@ -11,6 +12,107 @@ class ProfessionalRepository {
   ProfessionalRepository(this._apiClient);
 
   final ApiClient _apiClient;
+
+  Future<ProProfile?> fetchProfile() async {
+    try {
+      final response = await _apiClient.dio.get<Map<String, dynamic>>(
+        '/api/v1/pro/profile',
+      );
+
+      final data = response.data?['data'];
+      if (data is! Map<String, dynamic>) {
+        return null;
+      }
+
+      final raw = data['profile'];
+      if (raw == null) {
+        return null;
+      }
+      if (raw is! Map<String, dynamic>) {
+        throw StateError('Invalid professional profile response.');
+      }
+
+      return ProProfile.fromJson(raw);
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
+
+  Future<ProProfile> saveProfile({
+    required String displayName,
+    required String? bio,
+    required int? experienceYears,
+    required List<String> languages,
+    required int? districtId,
+  }) async {
+    try {
+      final response = await _apiClient.dio.put<Map<String, dynamic>>(
+        '/api/v1/pro/profile',
+        data: {
+          'displayName': displayName.trim(),
+          'bio': bio?.trim(),
+          'experienceYears': experienceYears,
+          'languages': languages,
+          'districtId': districtId,
+        },
+      );
+
+      return _parseProfile(response);
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
+
+  Future<ProProfile> submitVerification() async {
+    try {
+      final response = await _apiClient.dio.post<Map<String, dynamic>>(
+        '/api/v1/pro/profile/submit-verification',
+      );
+
+      return _parseProfile(response);
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
+
+  Future<List<ProDistrict>> fetchDistricts() async {
+    try {
+      final response = await _apiClient.dio.get<Map<String, dynamic>>(
+        '/api/v1/pro/districts',
+      );
+
+      final data = response.data?['data'];
+      if (data is! Map<String, dynamic>) {
+        return const [];
+      }
+
+      final raw = data['districts'];
+      if (raw is! List) {
+        return const [];
+      }
+
+      return raw
+          .whereType<Map<String, dynamic>>()
+          .map(ProDistrict.fromJson)
+          .toList();
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
+
+  ProProfile _parseProfile(Response<Map<String, dynamic>> response) {
+    final data = response.data?['data'];
+    if (data is! Map<String, dynamic>) {
+      throw StateError('Invalid professional profile response.');
+    }
+
+    final raw = data['profile'];
+    if (raw is! Map<String, dynamic>) {
+      throw StateError('Invalid professional profile response.');
+    }
+
+    return ProProfile.fromJson(raw);
+  }
 
   Future<List<ProBooking>> fetchBookings() async {
     try {

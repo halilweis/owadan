@@ -4,6 +4,7 @@ import '../../core/localization/app_localizations.dart';
 import '../../core/network/api_exception.dart';
 import 'availability_exceptions_screen.dart';
 import 'models/pro_booking.dart';
+import 'professional_profile_screen.dart';
 import 'professional_repository.dart';
 import 'service_management_screen.dart';
 import 'working_hours_screen.dart';
@@ -39,17 +40,13 @@ class _ProfessionalWorkspaceScreenState
     try {
       final bookings = await widget.repository.fetchBookings();
 
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       setState(() {
         _bookings = bookings;
       });
     } on ApiException catch (error) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       setState(() {
         _error = error.message;
@@ -70,9 +67,7 @@ class _ProfessionalWorkspaceScreenState
     try {
       final updated = await action(booking.id);
 
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       setState(() {
         _bookings = _bookings
@@ -80,9 +75,7 @@ class _ProfessionalWorkspaceScreenState
             .toList();
       });
     } on ApiException catch (error) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(error.message)));
@@ -115,6 +108,22 @@ class _ProfessionalWorkspaceScreenState
       appBar: AppBar(
         title: Text(title),
         actions: [
+          IconButton(
+            tooltip: _text(
+              en: 'Professional profile',
+              ru: 'Профиль специалиста',
+              tk: 'Hünärmen profili',
+            ),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) =>
+                      ProfessionalProfileScreen(repository: widget.repository),
+                ),
+              );
+            },
+            icon: const Icon(Icons.manage_accounts_outlined),
+          ),
           IconButton(
             tooltip: _text(en: 'Services', ru: 'Услуги', tk: 'Hyzmatlar'),
             onPressed: () {

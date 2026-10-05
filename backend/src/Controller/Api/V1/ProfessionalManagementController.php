@@ -20,6 +20,34 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class ProfessionalManagementController extends AbstractController
 {
+    #[Route('/api/v1/pro/districts', methods: ['GET'])]
+    public function districts(EntityManagerInterface $entityManager): JsonResponse
+    {
+        $user = $this->requireUser();
+        if (!$user instanceof User) {
+            return $this->unauthenticated();
+        }
+
+        $items = $entityManager->getRepository(District::class)->findBy(
+            [],
+            ['name' => 'ASC'],
+        );
+
+        return $this->json([
+            'data' => [
+                'districts' => array_map(
+                    static fn (District $district): array => [
+                        'id' => $district->getId(),
+                        'name' => $district->getName(),
+                        'cityId' => $district->getCity()->getId(),
+                        'cityName' => $district->getCity()->getName(),
+                    ],
+                    $items,
+                ),
+            ],
+        ]);
+    }
+
     #[Route('/api/v1/pro/profile', methods: ['GET'])]
     public function profile(ProfessionalProfileRepository $profiles): JsonResponse
     {
@@ -275,6 +303,8 @@ final class ProfessionalManagementController extends AbstractController
 
     private function profilePayload(ProfessionalProfile $profile): array
     {
+        $district = $profile->getDistrict();
+
         return [
             'id' => $profile->getId()->toRfc4122(),
             'displayName' => $profile->getDisplayName(),
@@ -283,6 +313,9 @@ final class ProfessionalManagementController extends AbstractController
             'languages' => $profile->getLanguages(),
             'verificationStatus' => $profile->getVerificationStatus()->value,
             'active' => $profile->isActive(),
+            'districtId' => $district?->getId(),
+            'districtName' => $district?->getName(),
+            'cityName' => $district?->getCity()->getName(),
         ];
     }
 
