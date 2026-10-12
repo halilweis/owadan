@@ -4,6 +4,7 @@ import '../../core/localization/app_localizations.dart';
 import '../../core/network/api_exception.dart';
 import 'availability_exceptions_screen.dart';
 import 'models/pro_booking.dart';
+import 'portfolio_management_screen.dart';
 import 'professional_profile_screen.dart';
 import 'professional_repository.dart';
 import 'service_management_screen.dart';
@@ -123,6 +124,18 @@ class _ProfessionalWorkspaceScreenState
               );
             },
             icon: const Icon(Icons.manage_accounts_outlined),
+          ),
+          IconButton(
+            tooltip: _text(en: 'Portfolio', ru: 'Портфолио', tk: 'Portfolio'),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) =>
+                      PortfolioManagementScreen(repository: widget.repository),
+                ),
+              );
+            },
+            icon: const Icon(Icons.photo_library_outlined),
           ),
           IconButton(
             tooltip: _text(en: 'Services', ru: 'Услуги', tk: 'Hyzmatlar'),

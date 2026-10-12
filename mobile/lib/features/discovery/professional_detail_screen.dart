@@ -8,6 +8,8 @@ import 'discovery_repository.dart';
 import 'models/professional_review.dart';
 import 'models/professional_service.dart';
 import 'models/professional_summary.dart';
+import 'models/professional_portfolio_item.dart';
+import 'widgets/professional_portfolio_gallery.dart';
 
 class ProfessionalDetailScreen extends StatefulWidget {
   const ProfessionalDetailScreen({
@@ -31,6 +33,7 @@ class _ProfessionalDetailScreenState extends State<ProfessionalDetailScreen> {
   ProfessionalSummary? _professional;
   List<ProfessionalService> _services = const [];
   List<ProfessionalReview> _reviews = const [];
+  List<ProfessionalPortfolioItem> _portfolio = const [];
   bool _isFavorite = false;
   @override
   void initState() {
@@ -43,22 +46,33 @@ class _ProfessionalDetailScreenState extends State<ProfessionalDetailScreen> {
       _loading = true;
       _error = null;
     });
+
     try {
       final bundle = await widget.repository.fetchProfessionalDetailBundle(
         widget.professionalId,
       );
+
       if (!mounted) return;
+
       setState(() {
         _professional = bundle.professional;
         _services = bundle.services;
         _reviews = bundle.reviews;
+        _portfolio = bundle.portfolio;
         _isFavorite = bundle.isFavorite;
       });
     } on ApiException catch (error) {
       if (!mounted) return;
-      setState(() => _error = error.message);
+
+      setState(() {
+        _error = error.message;
+      });
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
     }
   }
 
@@ -208,6 +222,18 @@ class _ProfessionalDetailScreenState extends State<ProfessionalDetailScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 24),
+        ],
+        if (_portfolio.isNotEmpty) ...[
+          _SectionTitle(
+            Localizations.localeOf(context).languageCode == 'tk'
+                ? 'Portfolio'
+                : Localizations.localeOf(context).languageCode == 'ru'
+                ? 'Портфолио'
+                : 'Portfolio',
+          ),
+          const SizedBox(height: 12),
+          ProfessionalPortfolioGallery(items: _portfolio),
           const SizedBox(height: 24),
         ],
         _SectionTitle(l10n.t('services')),

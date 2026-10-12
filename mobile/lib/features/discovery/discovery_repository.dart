@@ -7,6 +7,7 @@ import 'models/category_model.dart';
 import 'models/professional_review.dart';
 import 'models/professional_service.dart';
 import 'models/professional_summary.dart';
+import 'models/professional_portfolio_item.dart';
 
 class ProfessionalsPage {
   const ProfessionalsPage({
@@ -30,11 +31,13 @@ class ProfessionalDetailBundle {
     required this.services,
     required this.reviews,
     required this.isFavorite,
+    required this.portfolio,
   });
 
   final ProfessionalSummary professional;
   final List<ProfessionalService> services;
   final List<ProfessionalReview> reviews;
+  final List<ProfessionalPortfolioItem> portfolio;
   final bool isFavorite;
 }
 
@@ -217,12 +220,41 @@ class DiscoveryRepository {
     final services = await fetchProfessionalServices(id);
     final reviews = await fetchProfessionalReviews(id);
     final favorite = await isFavorite(id);
+    final portfolio = await fetchProfessionalPortfolio(id);
 
     return ProfessionalDetailBundle(
       professional: professional,
       services: services,
       reviews: reviews,
+      portfolio: portfolio,
       isFavorite: favorite,
     );
+  }
+
+  Future<List<ProfessionalPortfolioItem>> fetchProfessionalPortfolio(
+    String id,
+  ) async {
+    try {
+      final response = await _apiClient.dio.get<Map<String, dynamic>>(
+        '/api/v1/professionals/$id/portfolio',
+      );
+
+      final data = response.data?['data'];
+      if (data is! Map<String, dynamic>) {
+        return const [];
+      }
+
+      final raw = data['items'];
+      if (raw is! List) {
+        return const [];
+      }
+
+      return raw
+          .whereType<Map<String, dynamic>>()
+          .map(ProfessionalPortfolioItem.fromJson)
+          .toList();
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
   }
 }

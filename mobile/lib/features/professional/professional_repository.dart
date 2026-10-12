@@ -5,6 +5,7 @@ import '../discovery/models/category_model.dart';
 import 'models/availability_exception_item.dart';
 import 'models/pro_booking.dart';
 import 'models/pro_profile.dart';
+import 'models/portfolio_item.dart';
 import 'models/pro_service.dart';
 import 'models/working_hours_item.dart';
 
@@ -112,6 +113,140 @@ class ProfessionalRepository {
     }
 
     return ProProfile.fromJson(raw);
+  }
+
+  Future<List<PortfolioItemModel>> fetchPortfolio() async {
+    try {
+      final response = await _apiClient.dio.get<Map<String, dynamic>>(
+        '/api/v1/pro/portfolio',
+      );
+
+      final data = response.data?['data'];
+      if (data is! Map<String, dynamic>) {
+        return const [];
+      }
+
+      final raw = data['items'];
+      if (raw is! List) {
+        return const [];
+      }
+
+      return raw
+          .whereType<Map<String, dynamic>>()
+          .map(PortfolioItemModel.fromJson)
+          .toList();
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
+
+  Future<String> uploadPortfolioPhoto(String filePath) async {
+    try {
+      final fileName = filePath.split(RegExp(r'[/\\]')).last;
+
+      final formData = FormData.fromMap({
+        'image': await MultipartFile.fromFile(filePath, filename: fileName),
+      });
+
+      final response = await _apiClient.dio.post<Map<String, dynamic>>(
+        '/api/v1/pro/portfolio/upload',
+        data: formData,
+        options: Options(contentType: 'multipart/form-data'),
+      );
+
+      final data = response.data?['data'];
+      if (data is! Map<String, dynamic>) {
+        throw StateError('Invalid portfolio upload response.');
+      }
+
+      final imageUrl = data['imageUrl']?.toString();
+      if (imageUrl == null || imageUrl.isEmpty) {
+        throw StateError('Invalid portfolio upload response.');
+      }
+
+      return imageUrl;
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
+
+  Future<PortfolioItemModel> createPortfolioItem({
+    required String imageUrl,
+    String? title,
+    String? description,
+    String? serviceId,
+    bool featured = false,
+    bool active = true,
+  }) async {
+    try {
+      final response = await _apiClient.dio.post<Map<String, dynamic>>(
+        '/api/v1/pro/portfolio',
+        data: {
+          'imageUrl': imageUrl,
+          'title': title?.trim(),
+          'description': description?.trim(),
+          'serviceId': serviceId,
+          'featured': featured,
+          'active': active,
+        },
+      );
+
+      return _parsePortfolioItem(response);
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
+
+  Future<PortfolioItemModel> updatePortfolioItem({
+    required String id,
+    required String imageUrl,
+    String? title,
+    String? description,
+    String? serviceId,
+    required bool featured,
+    required bool active,
+  }) async {
+    try {
+      final response = await _apiClient.dio.put<Map<String, dynamic>>(
+        '/api/v1/pro/portfolio/$id',
+        data: {
+          'imageUrl': imageUrl,
+          'title': title?.trim(),
+          'description': description?.trim(),
+          'serviceId': serviceId,
+          'featured': featured,
+          'active': active,
+        },
+      );
+
+      return _parsePortfolioItem(response);
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
+
+  Future<void> deletePortfolioItem(String id) async {
+    try {
+      await _apiClient.dio.delete<void>('/api/v1/pro/portfolio/$id');
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
+
+  PortfolioItemModel _parsePortfolioItem(
+    Response<Map<String, dynamic>> response,
+  ) {
+    final data = response.data?['data'];
+    if (data is! Map<String, dynamic>) {
+      throw StateError('Invalid portfolio response.');
+    }
+
+    final raw = data['portfolioItem'];
+    if (raw is! Map<String, dynamic>) {
+      throw StateError('Invalid portfolio response.');
+    }
+
+    return PortfolioItemModel.fromJson(raw);
   }
 
   Future<List<ProBooking>> fetchBookings() async {
