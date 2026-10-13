@@ -10,6 +10,7 @@ import 'professional_repository.dart';
 import 'service_management_screen.dart';
 import 'working_hours_screen.dart';
 import 'professional_dashboard_screen.dart';
+import 'professional_calendar_screen.dart';
 
 class ProfessionalWorkspaceScreen extends StatefulWidget {
   const ProfessionalWorkspaceScreen({required this.repository, super.key});
@@ -122,6 +123,18 @@ class _ProfessionalWorkspaceScreenState
               );
             },
             icon: const Icon(Icons.dashboard_outlined),
+          ),
+          IconButton(
+            tooltip: _text(en: 'Calendar', ru: 'Календарь', tk: 'Senenama'),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) =>
+                      ProfessionalCalendarScreen(repository: widget.repository),
+                ),
+              );
+            },
+            icon: const Icon(Icons.calendar_month_outlined),
           ),
           IconButton(
             tooltip: _text(

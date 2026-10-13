@@ -9,6 +9,7 @@ import 'professional_profile_screen.dart';
 import 'professional_repository.dart';
 import 'service_management_screen.dart';
 import 'working_hours_screen.dart';
+import 'professional_calendar_screen.dart';
 
 class ProfessionalDashboardScreen extends StatefulWidget {
   const ProfessionalDashboardScreen({required this.repository, super.key});
@@ -339,6 +340,19 @@ class _ProfessionalDashboardScreenState
                         ),
                         onTap: () => _open(
                           ProfessionalProfileScreen(
+                            repository: widget.repository,
+                          ),
+                        ),
+                      ),
+                      _QuickAction(
+                        icon: Icons.calendar_month_outlined,
+                        label: _text(
+                          en: 'Calendar',
+                          ru: 'Календарь',
+                          tk: 'Senenama',
+                        ),
+                        onTap: () => _open(
+                          ProfessionalCalendarScreen(
                             repository: widget.repository,
                           ),
                         ),
