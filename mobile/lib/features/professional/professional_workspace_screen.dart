@@ -9,6 +9,7 @@ import 'professional_profile_screen.dart';
 import 'professional_repository.dart';
 import 'service_management_screen.dart';
 import 'working_hours_screen.dart';
+import 'professional_dashboard_screen.dart';
 
 class ProfessionalWorkspaceScreen extends StatefulWidget {
   const ProfessionalWorkspaceScreen({required this.repository, super.key});
@@ -109,6 +110,19 @@ class _ProfessionalWorkspaceScreenState
       appBar: AppBar(
         title: Text(title),
         actions: [
+          IconButton(
+            tooltip: _text(en: 'Dashboard', ru: 'Панель', tk: 'Panel'),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => ProfessionalDashboardScreen(
+                    repository: widget.repository,
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.dashboard_outlined),
+          ),
           IconButton(
             tooltip: _text(
               en: 'Professional profile',

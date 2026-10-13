@@ -45,6 +45,8 @@ final class ProfessionalDashboardController extends AbstractController
         $now = new \DateTimeImmutable();
         $todayStart = $now->setTime(0, 0);
         $todayEnd = $todayStart->modify('+1 day');
+        $monthStart = $todayStart->modify('first day of this month');
+        $monthEnd = $monthStart->modify('+1 month');
 
         $todayAppointments = $entityManager->createQueryBuilder()
             ->select('COUNT(b.id)')
@@ -100,6 +102,32 @@ final class ProfessionalDashboardController extends AbstractController
             ->getQuery()
             ->getSingleScalarResult();
 
+        $totalRevenue = $entityManager->createQueryBuilder()
+            ->select('COALESCE(SUM(b.price), 0)')
+            ->from(Booking::class, 'b')
+            ->where('b.professional = :professional')
+            ->andWhere('b.status = :status')
+            ->andWhere('b.price IS NOT NULL')
+            ->setParameter('professional', $profile)
+            ->setParameter('status', BookingStatus::COMPLETED)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $monthRevenue = $entityManager->createQueryBuilder()
+            ->select('COALESCE(SUM(b.price), 0)')
+            ->from(Booking::class, 'b')
+            ->where('b.professional = :professional')
+            ->andWhere('b.status = :status')
+            ->andWhere('b.price IS NOT NULL')
+            ->andWhere('b.startsAt >= :monthStart')
+            ->andWhere('b.startsAt < :monthEnd')
+            ->setParameter('professional', $profile)
+            ->setParameter('status', BookingStatus::COMPLETED)
+            ->setParameter('monthStart', $monthStart)
+            ->setParameter('monthEnd', $monthEnd)
+            ->getQuery()
+            ->getSingleScalarResult();
+
         $reviewStats = $entityManager->createQueryBuilder()
             ->select('COUNT(r.id) AS reviewCount')
             ->addSelect('AVG(r.rating) AS averageRating')
@@ -115,6 +143,9 @@ final class ProfessionalDashboardController extends AbstractController
                     'todayAppointments' => (int) $todayAppointments,
                     'pendingBookings' => (int) $pendingBookings,
                     'completedBookings' => (int) $completedBookings,
+                    'totalRevenue' => round((float) $totalRevenue, 2),
+                    'monthRevenue' => round((float) $monthRevenue, 2),
+                    'currency' => 'TMT',
                     'reviewCount' => (int) ($reviewStats['reviewCount'] ?? 0),
                     'averageRating' => isset($reviewStats['averageRating'])
                         ? round((float) $reviewStats['averageRating'], 2)

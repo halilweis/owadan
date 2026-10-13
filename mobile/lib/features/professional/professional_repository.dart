@@ -8,6 +8,7 @@ import 'models/pro_profile.dart';
 import 'models/portfolio_item.dart';
 import 'models/pro_service.dart';
 import 'models/working_hours_item.dart';
+import 'models/pro_dashboard.dart';
 
 class ProfessionalRepository {
   ProfessionalRepository(this._apiClient);
@@ -535,6 +536,28 @@ class ProfessionalRepository {
       }
 
       return ProBooking.fromJson(booking);
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
+
+  Future<ProDashboard> fetchDashboard() async {
+    try {
+      final response = await _apiClient.dio.get<Map<String, dynamic>>(
+        '/api/v1/pro/dashboard',
+      );
+
+      final data = response.data?['data'];
+      if (data is! Map<String, dynamic>) {
+        throw StateError('Invalid professional dashboard response.');
+      }
+
+      final raw = data['dashboard'];
+      if (raw is! Map<String, dynamic>) {
+        throw StateError('Invalid professional dashboard response.');
+      }
+
+      return ProDashboard.fromJson(raw);
     } on DioException catch (error) {
       throw ApiClient.mapError(error);
     }
