@@ -5,6 +5,7 @@ import '../discovery/models/professional_review.dart';
 import '../discovery/models/professional_service.dart';
 import 'models/availability_slot.dart';
 import 'models/booking_model.dart';
+import '../messaging/models/booking_message.dart';
 
 class BookingRepository {
   BookingRepository(this._apiClient);
@@ -147,6 +148,53 @@ class BookingRepository {
       }
 
       return ProfessionalReview.fromJson(review);
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
+
+  Future<List<BookingMessage>> fetchBookingMessages(String bookingId) async {
+    try {
+      final response = await _apiClient.dio.get<Map<String, dynamic>>(
+        '/api/v1/bookings/$bookingId/messages',
+      );
+
+      final data = response.data?['data'];
+      if (data is! Map<String, dynamic>) return const [];
+
+      final raw = data['messages'];
+      if (raw is! List) return const [];
+
+      return raw
+          .whereType<Map<String, dynamic>>()
+          .map(BookingMessage.fromJson)
+          .toList();
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
+
+  Future<BookingMessage> sendBookingMessage(
+    String bookingId,
+    String body,
+  ) async {
+    try {
+      final response = await _apiClient.dio.post<Map<String, dynamic>>(
+        '/api/v1/bookings/$bookingId/messages',
+        data: {'body': body.trim()},
+      );
+
+      final data = response.data?['data'];
+      if (data is! Map<String, dynamic>) {
+        throw StateError('Invalid booking message response.');
+      }
+
+      final raw = data['message'];
+      if (raw is! Map<String, dynamic>) {
+        throw StateError('Invalid booking message response.');
+      }
+
+      return BookingMessage.fromJson(raw);
     } on DioException catch (error) {
       throw ApiClient.mapError(error);
     }

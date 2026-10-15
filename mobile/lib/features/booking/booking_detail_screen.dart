@@ -8,6 +8,7 @@ import '../discovery/models/professional_summary.dart';
 import 'booking_repository.dart';
 import 'models/booking_model.dart';
 import 'review_screen.dart';
+import '../messaging/booking_message_screen.dart';
 
 class BookingDetailScreen extends StatefulWidget {
   const BookingDetailScreen({
@@ -269,6 +270,16 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               ),
             ),
           ),
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: _openMessages,
+            icon: const Icon(Icons.chat_bubble_outline),
+            label: Text(switch (language) {
+              'tk' => 'Habarlaş',
+              'ru' => 'Сообщения',
+              _ => 'Message professional',
+            }),
+          ),
           if (_booking.status == 'COMPLETED') ...[
             const SizedBox(height: 16),
             if (_loadingReview)
@@ -362,6 +373,24 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
   String _time(DateTime value) {
     return '${value.hour.toString().padLeft(2, '0')}:'
         '${value.minute.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _openMessages() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => BookingMessageScreen(
+          bookingId: _booking.id,
+          title: switch (Localizations.localeOf(context).languageCode) {
+            'tk' => 'Habarlar',
+            'ru' => 'Сообщения',
+            _ => 'Messages',
+          },
+          currentRole: 'CUSTOMER',
+          fetchMessages: widget.bookingRepository.fetchBookingMessages,
+          sendMessage: widget.bookingRepository.sendBookingMessage,
+        ),
+      ),
+    );
   }
 }
 

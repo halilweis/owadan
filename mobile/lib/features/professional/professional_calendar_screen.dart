@@ -4,6 +4,7 @@ import '../../core/localization/app_localizations.dart';
 import '../../core/network/api_exception.dart';
 import 'models/pro_booking.dart';
 import 'professional_repository.dart';
+import '../messaging/booking_message_screen.dart';
 
 class ProfessionalCalendarScreen extends StatefulWidget {
   const ProfessionalCalendarScreen({required this.repository, super.key});
@@ -476,6 +477,25 @@ class _ProfessionalCalendarScreenState
                                   widget.repository.cancel,
                                 )
                               : null,
+                          onMessage: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => BookingMessageScreen(
+                                  bookingId: booking.id,
+                                  title: _text(
+                                    en: 'Appointment messages',
+                                    ru: 'Сообщения по записи',
+                                    tk: 'Ýazgy habarlary',
+                                  ),
+                                  currentRole: 'PROFESSIONAL',
+                                  fetchMessages:
+                                      widget.repository.fetchBookingMessages,
+                                  sendMessage:
+                                      widget.repository.sendBookingMessage,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -495,6 +515,7 @@ class _AgendaCard extends StatelessWidget {
     this.onComplete,
     this.onNoShow,
     this.onCancel,
+    this.onMessage,
   });
 
   final ProBooking booking;
@@ -509,6 +530,7 @@ class _AgendaCard extends StatelessWidget {
   final VoidCallback? onComplete;
   final VoidCallback? onNoShow;
   final VoidCallback? onCancel;
+  final VoidCallback? onMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -586,7 +608,8 @@ class _AgendaCard extends StatelessWidget {
                 onDecline != null ||
                 onComplete != null ||
                 onNoShow != null ||
-                onCancel != null) ...[
+                onCancel != null ||
+                onMessage != null) ...[
               const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
@@ -625,6 +648,14 @@ class _AgendaCard extends StatelessWidget {
                       onPressed: onCancel,
                       child: Text(
                         text(en: 'Cancel', ru: 'Отменить', tk: 'Ýatyr'),
+                      ),
+                    ),
+                  if (onMessage != null)
+                    OutlinedButton.icon(
+                      onPressed: onMessage,
+                      icon: const Icon(Icons.chat_bubble_outline),
+                      label: Text(
+                        text(en: 'Message', ru: 'Сообщение', tk: 'Habar'),
                       ),
                     ),
                 ],
