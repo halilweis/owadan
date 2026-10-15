@@ -10,6 +10,7 @@ class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({
     required this.repository,
     required this.onOpenBookings,
+    required this.onOpenConversation,
     required this.onUnreadCountChanged,
     super.key,
   });
@@ -17,6 +18,7 @@ class NotificationsScreen extends StatefulWidget {
   final NotificationRepository repository;
   final VoidCallback onOpenBookings;
   final ValueChanged<int> onUnreadCountChanged;
+  final void Function(String bookingId, String role) onOpenConversation;
 
   @override
   State<NotificationsScreen> createState() => _NotificationsScreenState();
@@ -149,11 +151,23 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   void _openNotification(AppNotification notification) {
-    if (notification.bookingId == null) {
+    final bookingId = notification.bookingId;
+
+    if (bookingId == null || bookingId.isEmpty) {
       return;
     }
 
+    final role = notification.conversationRole;
+
     Navigator.of(context).pop();
+
+    if (notification.type == 'BOOKING_MESSAGE' &&
+        role != null &&
+        (role == 'CUSTOMER' || role == 'PROFESSIONAL')) {
+      widget.onOpenConversation(bookingId, role);
+      return;
+    }
+
     widget.onOpenBookings();
   }
 
@@ -314,6 +328,7 @@ class _NotificationTile extends StatelessWidget {
       'BOOKING_NO_SHOW' => Icons.person_off_outlined,
       'NEW_BOOKING' => Icons.event_note,
       'REVIEW_RECEIVED' => Icons.star_outline,
+      'BOOKING_MESSAGE' => Icons.chat_bubble_outline,
       _ => Icons.notifications_outlined,
     };
   }

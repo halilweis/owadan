@@ -51,6 +51,11 @@ class NotificationText {
         ru: 'Получен новый отзыв',
         en: 'New review received',
       ),
+      'BOOKING_MESSAGE' => switch (language) {
+        'tk' => 'Täze habar',
+        'ru' => 'Новое сообщение',
+        _ => 'New message',
+      },
       _ => notification.title,
     };
   }
@@ -101,6 +106,11 @@ class NotificationText {
         ru: 'Вы получили новый отзыв.',
         en: 'You received a new review.',
       ),
+      'BOOKING_MESSAGE' => switch (language) {
+        'tk' => 'Ýazgyňyz barada täze habar bar.',
+        'ru' => 'Новое сообщение по вашей записи.',
+        _ => 'You have a new message about an appointment.',
+      },
       _ => notification.message,
     };
   }

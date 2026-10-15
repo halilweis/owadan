@@ -18,6 +18,7 @@ class AppNotification {
   final DateTime createdAt;
 
   String? get bookingId => data['bookingId']?.toString();
+  String? get conversationRole => data['conversationRole']?.toString();
 
   factory AppNotification.fromJson(Map<String, dynamic> json) {
     final rawData = json['data'];

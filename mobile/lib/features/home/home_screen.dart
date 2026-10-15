@@ -18,6 +18,7 @@ import '../notifications/notifications_screen.dart';
 import '../profile/profile_repository.dart';
 import '../profile/profile_screen.dart';
 import '../professional/professional_repository.dart';
+import '../messaging/booking_message_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -135,6 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
               });
             }
           },
+          onOpenConversation: _openBookingConversation,
         ),
       ),
     );
@@ -374,6 +376,36 @@ class _HomeScreenState extends State<HomeScreen> {
         TextButton(onPressed: onAction, child: Text(actionText)),
       ],
     );
+  }
+
+  Future<void> _openBookingConversation(String bookingId, String role) async {
+    if (!mounted) {
+      return;
+    }
+
+    final professional = role == 'PROFESSIONAL';
+
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => BookingMessageScreen(
+          bookingId: bookingId,
+          title: switch (Localizations.localeOf(context).languageCode) {
+            'tk' => 'Ýazgy habarlary',
+            'ru' => 'Сообщения по записи',
+            _ => 'Appointment messages',
+          },
+          currentRole: professional ? 'PROFESSIONAL' : 'CUSTOMER',
+          fetchMessages: professional
+              ? widget.professionalRepository.fetchBookingMessages
+              : widget.bookingRepository.fetchBookingMessages,
+          sendMessage: professional
+              ? widget.professionalRepository.sendBookingMessage
+              : widget.bookingRepository.sendBookingMessage,
+        ),
+      ),
+    );
+
+    await _loadUnreadCount();
   }
 }
 

@@ -74,6 +74,7 @@ final class BookingMessageController extends AbstractController
             ),
             [
                 'bookingId' => (string) $booking->getId(),
+                 'conversationRole' => 'PROFESSIONAL',
             ],
         );
 
@@ -144,6 +145,7 @@ final class BookingMessageController extends AbstractController
             ),
             [
                 'bookingId' => (string) $booking->getId(),
+                 'conversationRole' => 'CUSTOMER',
             ],
         );
 
