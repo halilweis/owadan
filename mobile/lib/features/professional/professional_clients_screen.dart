@@ -6,10 +6,7 @@ import 'professional_client_detail_screen.dart';
 import 'professional_repository.dart';
 
 class ProfessionalClientsScreen extends StatefulWidget {
-  const ProfessionalClientsScreen({
-    required this.repository,
-    super.key,
-  });
+  const ProfessionalClientsScreen({required this.repository, super.key});
 
   final ProfessionalRepository repository;
 
@@ -18,8 +15,7 @@ class ProfessionalClientsScreen extends StatefulWidget {
       _ProfessionalClientsScreenState();
 }
 
-class _ProfessionalClientsScreenState
-    extends State<ProfessionalClientsScreen> {
+class _ProfessionalClientsScreenState extends State<ProfessionalClientsScreen> {
   bool _loading = true;
   String? _error;
   String _query = '';
@@ -55,11 +51,7 @@ class _ProfessionalClientsScreenState
     }
   }
 
-  String _text({
-    required String en,
-    required String ru,
-    required String tk,
-  }) {
+  String _text({required String en, required String ru, required String tk}) {
     return switch (Localizations.localeOf(context).languageCode) {
       'tk' => tk,
       'ru' => ru,
@@ -83,13 +75,7 @@ class _ProfessionalClientsScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          _text(
-            en: 'Clients',
-            ru: 'Клиенты',
-            tk: 'Müşderiler',
-          ),
-        ),
+        title: Text(_text(en: 'Clients', ru: 'Клиенты', tk: 'Müşderiler')),
       ),
       body: RefreshIndicator(
         onRefresh: _load,
@@ -102,132 +88,124 @@ class _ProfessionalClientsScreenState
                 ],
               )
             : _error != null
-                ? ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(24),
-                    children: [
-                      const SizedBox(height: 130),
-                      const Icon(Icons.people_outline, size: 54),
-                      const SizedBox(height: 14),
-                      Text(_error!, textAlign: TextAlign.center),
-                      const SizedBox(height: 12),
-                      FilledButton(
-                        onPressed: _load,
-                        child: Text(
-                          _text(
-                            en: 'Try again',
-                            ru: 'Повторить',
-                            tk: 'Gaýtadan synanyş',
-                          ),
+            ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(24),
+                children: [
+                  const SizedBox(height: 130),
+                  const Icon(Icons.people_outline, size: 54),
+                  const SizedBox(height: 14),
+                  Text(_error!, textAlign: TextAlign.center),
+                  const SizedBox(height: 12),
+                  FilledButton(
+                    onPressed: _load,
+                    child: Text(
+                      _text(
+                        en: 'Try again',
+                        ru: 'Повторить',
+                        tk: 'Gaýtadan synanyş',
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+                children: [
+                  TextField(
+                    onChanged: (value) => setState(() => _query = value),
+                    decoration: InputDecoration(
+                      hintText: _text(
+                        en: 'Search clients',
+                        ru: 'Поиск клиентов',
+                        tk: 'Müşderi gözle',
+                      ),
+                      prefixIcon: const Icon(Icons.search),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (clients.isEmpty)
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(22),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.people_outline),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                _text(
+                                  en: 'No clients found.',
+                                  ru: 'Клиенты не найдены.',
+                                  tk: 'Müşderi tapylmady.',
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  )
-                : ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
-                    children: [
-                      TextField(
-                        onChanged: (value) => setState(() => _query = value),
-                        decoration: InputDecoration(
-                          hintText: _text(
-                            en: 'Search clients',
-                            ru: 'Поиск клиентов',
-                            tk: 'Müşderi gözle',
-                          ),
-                          prefixIcon: const Icon(Icons.search),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      if (clients.isEmpty)
-                        Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(22),
-                            child: Row(
+                    )
+                  else
+                    ...clients.map(
+                      (client) => Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Card(
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              child: Text(_initials(client.title)),
+                            ),
+                            title: Text(
+                              client.title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Icon(Icons.people_outline),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    _text(
-                                      en: 'No clients found.',
-                                      ru: 'Клиенты не найдены.',
-                                      tk: 'Müşderi tapylmady.',
-                                    ),
+                                if (client.displayName != null)
+                                  Text(client.phoneNumber),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _text(
+                                    en: '${client.appointmentCount} appointments • ${client.completedCount} completed',
+                                    ru: '${client.appointmentCount} записей • ${client.completedCount} завершено',
+                                    tk: '${client.appointmentCount} ýazgy • ${client.completedCount} tamamlandy',
                                   ),
                                 ),
+                                if (client.noShowCount > 0)
+                                  Text(
+                                    _text(
+                                      en: '${client.noShowCount} no-show',
+                                      ru: 'Неявок: ${client.noShowCount}',
+                                      tk: 'Gelmedik: ${client.noShowCount}',
+                                    ),
+                                  ),
                               ],
                             ),
-                          ),
-                        )
-                      else
-                        ...clients.map(
-                          (client) => Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: Card(
-                              child: ListTile(
-                                leading: CircleAvatar(
-                                  child: Text(
-                                    _initials(client.title),
-                                  ),
-                                ),
-                                title: Text(
-                                  client.title,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if (client.displayName != null)
-                                      Text(client.phoneNumber),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      _text(
-                                        en:
-                                            '${client.appointmentCount} appointments • ${client.completedCount} completed',
-                                        ru:
-                                            '${client.appointmentCount} записей • ${client.completedCount} завершено',
-                                        tk:
-                                            '${client.appointmentCount} ýazgy • ${client.completedCount} tamamlandy',
-                                      ),
-                                    ),
-                                    if (client.noShowCount > 0)
-                                      Text(
-                                        _text(
-                                          en:
-                                              '${client.noShowCount} no-show',
-                                          ru:
-                                              'Неявок: ${client.noShowCount}',
-                                          tk:
-                                              'Gelmedik: ${client.noShowCount}',
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                                trailing: const Icon(Icons.chevron_right),
-                                onTap: () async {
-                                  await Navigator.of(context).push(
-                                    MaterialPageRoute<void>(
-                                      builder: (_) =>
-                                          ProfessionalClientDetailScreen(
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) =>
+                                      ProfessionalClientDetailScreen(
                                         repository: widget.repository,
                                         customerId: client.customerId,
                                       ),
-                                    ),
-                                  );
+                                ),
+                              );
 
-                                  if (mounted) {
-                                    await _load();
-                                  }
-                                },
-                              ),
-                            ),
+                              if (mounted) {
+                                await _load();
+                              }
+                            },
                           ),
                         ),
-                    ],
-                  ),
+                      ),
+                    ),
+                ],
+              ),
       ),
     );
   }

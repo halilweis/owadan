@@ -11,6 +11,7 @@ import 'service_management_screen.dart';
 import 'working_hours_screen.dart';
 import 'professional_calendar_screen.dart';
 import 'professional_clients_screen.dart';
+import 'professional_analytics_screen.dart';
 
 class ProfessionalDashboardScreen extends StatefulWidget {
   const ProfessionalDashboardScreen({required this.repository, super.key});
@@ -367,6 +368,19 @@ class _ProfessionalDashboardScreenState
                         ),
                         onTap: () => _open(
                           ProfessionalClientsScreen(
+                            repository: widget.repository,
+                          ),
+                        ),
+                      ),
+                      _QuickAction(
+                        icon: Icons.analytics_outlined,
+                        label: _text(
+                          en: 'Analytics',
+                          ru: 'Аналитика',
+                          tk: 'Analitika',
+                        ),
+                        onTap: () => _open(
+                          ProfessionalAnalyticsScreen(
                             repository: widget.repository,
                           ),
                         ),

@@ -105,11 +105,7 @@ class _ProfessionalClientDetailScreenState
     }
   }
 
-  String _text({
-    required String en,
-    required String ru,
-    required String tk,
-  }) {
+  String _text({required String en, required String ru, required String tk}) {
     return switch (Localizations.localeOf(context).languageCode) {
       'tk' => tk,
       'ru' => ru,
@@ -124,12 +120,7 @@ class _ProfessionalClientDetailScreenState
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          client?.title ??
-              _text(
-                en: 'Client',
-                ru: 'Клиент',
-                tk: 'Müşderi',
-              ),
+          client?.title ?? _text(en: 'Client', ru: 'Клиент', tk: 'Müşderi'),
         ),
       ),
       body: RefreshIndicator(
@@ -143,212 +134,190 @@ class _ProfessionalClientDetailScreenState
                 ],
               )
             : _error != null && client == null
-                ? ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(24),
-                    children: [
-                      const SizedBox(height: 130),
-                      Text(_error!, textAlign: TextAlign.center),
-                      const SizedBox(height: 12),
-                      FilledButton(
-                        onPressed: _load,
-                        child: Text(
-                          _text(
-                            en: 'Try again',
-                            ru: 'Повторить',
-                            tk: 'Gaýtadan synanyş',
-                          ),
-                        ),
+            ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(24),
+                children: [
+                  const SizedBox(height: 130),
+                  Text(_error!, textAlign: TextAlign.center),
+                  const SizedBox(height: 12),
+                  FilledButton(
+                    onPressed: _load,
+                    child: Text(
+                      _text(
+                        en: 'Try again',
+                        ru: 'Повторить',
+                        tk: 'Gaýtadan synanyş',
                       ),
-                    ],
-                  )
-                : client == null
-                    ? const SizedBox.shrink()
-                    : ListView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+                    ),
+                  ),
+                ],
+              )
+            : client == null
+            ? const SizedBox.shrink()
+            : ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+                children: [
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(18),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    client.title,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleLarge
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(client.phoneNumber),
-                                  const SizedBox(height: 18),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: _Metric(
-                                          value:
-                                              '${client.appointmentCount}',
-                                          label: _text(
-                                            en: 'Appointments',
-                                            ru: 'Записи',
-                                            tk: 'Ýazgylar',
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: _Metric(
-                                          value: '${client.completedCount}',
-                                          label: _text(
-                                            en: 'Completed',
-                                            ru: 'Завершено',
-                                            tk: 'Tamamlanan',
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: _Metric(
-                                          value: '${client.noShowCount}',
-                                          label: _text(
-                                            en: 'No-shows',
-                                            ru: 'Неявки',
-                                            tk: 'Gelmedik',
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    _text(
-                                      en:
-                                          'Total spent: ${client.totalSpent.toStringAsFixed(2)} ${client.currency}',
-                                      ru:
-                                          'Всего потрачено: ${client.totalSpent.toStringAsFixed(2)} ${client.currency}',
-                                      tk:
-                                          'Jemi çykdajy: ${client.totalSpent.toStringAsFixed(2)} ${client.currency}',
-                                    ),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                          Text(
+                            client.title,
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w800),
                           ),
+                          const SizedBox(height: 4),
+                          Text(client.phoneNumber),
                           const SizedBox(height: 18),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _Metric(
+                                  value: '${client.appointmentCount}',
+                                  label: _text(
+                                    en: 'Appointments',
+                                    ru: 'Записи',
+                                    tk: 'Ýazgylar',
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: _Metric(
+                                  value: '${client.completedCount}',
+                                  label: _text(
+                                    en: 'Completed',
+                                    ru: 'Завершено',
+                                    tk: 'Tamamlanan',
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: _Metric(
+                                  value: '${client.noShowCount}',
+                                  label: _text(
+                                    en: 'No-shows',
+                                    ru: 'Неявки',
+                                    tk: 'Gelmedik',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
                           Text(
                             _text(
-                              en: 'Private client note',
-                              ru: 'Личная заметка о клиенте',
-                              tk: 'Şahsy müşderi belligi',
+                              en: 'Total spent: ${client.totalSpent.toStringAsFixed(2)} ${client.currency}',
+                              ru: 'Всего потрачено: ${client.totalSpent.toStringAsFixed(2)} ${client.currency}',
+                              tk: 'Jemi çykdajy: ${client.totalSpent.toStringAsFixed(2)} ${client.currency}',
                             ),
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
-                                ?.copyWith(fontWeight: FontWeight.w800),
-                          ),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: _noteController,
-                            minLines: 3,
-                            maxLines: 6,
-                            maxLength: 2000,
-                            decoration: InputDecoration(
-                              hintText: _text(
-                                en:
-                                    'Preferences, allergies, style notes, reminders...',
-                                ru:
-                                    'Предпочтения, аллергии, стиль, напоминания...',
-                                tk:
-                                    'Islegler, allergiýalar, stil bellikleri, ýatlatmalar...',
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          FilledButton.icon(
-                            onPressed: _savingNote ? null : _saveNote,
-                            icon: _savingNote
-                                ? const SizedBox.square(
-                                    dimension: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Icon(Icons.save_outlined),
-                            label: Text(
-                              _text(
-                                en: 'Save note',
-                                ru: 'Сохранить заметку',
-                                tk: 'Belligi ýatda sakla',
-                              ),
-                            ),
-                          ),
-                          if (_error != null) ...[
-                            const SizedBox(height: 10),
-                            Text(
-                              _error!,
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.error,
-                              ),
-                            ),
-                          ],
-                          const SizedBox(height: 22),
-                          Text(
-                            _text(
-                              en: 'Appointment history',
-                              ru: 'История записей',
-                              tk: 'Ýazgy taryhy',
-                            ),
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
-                                ?.copyWith(fontWeight: FontWeight.w800),
-                          ),
-                          const SizedBox(height: 10),
-                          ...client.appointments.map(
-                            (appointment) => Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
-                              child: _AppointmentCard(
-                                appointment: appointment,
-                                text: _text,
-                                onMessage: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute<void>(
-                                      builder: (_) => BookingMessageScreen(
-                                        bookingId: appointment.id,
-                                        title: _text(
-                                          en: 'Appointment messages',
-                                          ru: 'Сообщения по записи',
-                                          tk: 'Ýazgy habarlary',
-                                        ),
-                                        currentRole: 'PROFESSIONAL',
-                                        fetchMessages: widget.repository
-                                            .fetchBookingMessages,
-                                        sendMessage: widget.repository
-                                            .sendBookingMessage,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
+                            style: const TextStyle(fontWeight: FontWeight.w700),
                           ),
                         ],
                       ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    _text(
+                      en: 'Private client note',
+                      ru: 'Личная заметка о клиенте',
+                      tk: 'Şahsy müşderi belligi',
+                    ),
+                    style: Theme.of(context).textTheme.titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _noteController,
+                    minLines: 3,
+                    maxLines: 6,
+                    maxLength: 2000,
+                    decoration: InputDecoration(
+                      hintText: _text(
+                        en: 'Preferences, allergies, style notes, reminders...',
+                        ru: 'Предпочтения, аллергии, стиль, напоминания...',
+                        tk: 'Islegler, allergiýalar, stil bellikleri, ýatlatmalar...',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  FilledButton.icon(
+                    onPressed: _savingNote ? null : _saveNote,
+                    icon: _savingNote
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.save_outlined),
+                    label: Text(
+                      _text(
+                        en: 'Save note',
+                        ru: 'Сохранить заметку',
+                        tk: 'Belligi ýatda sakla',
+                      ),
+                    ),
+                  ),
+                  if (_error != null) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      _error!,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 22),
+                  Text(
+                    _text(
+                      en: 'Appointment history',
+                      ru: 'История записей',
+                      tk: 'Ýazgy taryhy',
+                    ),
+                    style: Theme.of(context).textTheme.titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 10),
+                  ...client.appointments.map(
+                    (appointment) => Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: _AppointmentCard(
+                        appointment: appointment,
+                        text: _text,
+                        onMessage: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => BookingMessageScreen(
+                                bookingId: appointment.id,
+                                title: _text(
+                                  en: 'Appointment messages',
+                                  ru: 'Сообщения по записи',
+                                  tk: 'Ýazgy habarlary',
+                                ),
+                                currentRole: 'PROFESSIONAL',
+                                fetchMessages:
+                                    widget.repository.fetchBookingMessages,
+                                sendMessage:
+                                    widget.repository.sendBookingMessage,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
   }
 }
 
 class _Metric extends StatelessWidget {
-  const _Metric({
-    required this.value,
-    required this.label,
-  });
+  const _Metric({required this.value, required this.label});
 
   final String value;
   final String label;
@@ -359,9 +328,7 @@ class _Metric extends StatelessWidget {
       children: [
         Text(
           value,
-          style: Theme.of(context)
-              .textTheme
-              .titleLarge
+          style: Theme.of(context).textTheme.titleLarge
               ?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 2),
@@ -387,7 +354,8 @@ class _AppointmentCard extends StatelessWidget {
     required String en,
     required String ru,
     required String tk,
-  }) text;
+  })
+  text;
   final VoidCallback onMessage;
 
   @override
@@ -435,11 +403,7 @@ class _AppointmentCard extends StatelessWidget {
               onPressed: onMessage,
               icon: const Icon(Icons.chat_bubble_outline),
               label: Text(
-                text(
-                  en: 'Messages',
-                  ru: 'Сообщения',
-                  tk: 'Habarlar',
-                ),
+                text(en: 'Messages', ru: 'Сообщения', tk: 'Habarlar'),
               ),
             ),
           ],

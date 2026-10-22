@@ -12,6 +12,7 @@ import 'working_hours_screen.dart';
 import 'professional_dashboard_screen.dart';
 import 'professional_calendar_screen.dart';
 import 'professional_clients_screen.dart';
+import 'professional_analytics_screen.dart';
 
 class ProfessionalWorkspaceScreen extends StatefulWidget {
   const ProfessionalWorkspaceScreen({required this.repository, super.key});
@@ -126,6 +127,19 @@ class _ProfessionalWorkspaceScreenState
             icon: const Icon(Icons.dashboard_outlined),
           ),
           IconButton(
+            tooltip: _text(en: 'Analytics', ru: 'Аналитика', tk: 'Analitika'),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => ProfessionalAnalyticsScreen(
+                    repository: widget.repository,
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.analytics_outlined),
+          ),
+          IconButton(
             tooltip: _text(en: 'Calendar', ru: 'Календарь', tk: 'Senenama'),
             onPressed: () {
               Navigator.of(context).push(
@@ -138,17 +152,12 @@ class _ProfessionalWorkspaceScreenState
             icon: const Icon(Icons.calendar_month_outlined),
           ),
           IconButton(
-            tooltip: _text(
-              en: 'Clients',
-              ru: 'Клиенты',
-              tk: 'Müşderiler',
-            ),
+            tooltip: _text(en: 'Clients', ru: 'Клиенты', tk: 'Müşderiler'),
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (_) => ProfessionalClientsScreen(
-                    repository: widget.repository,
-                  ),
+                  builder: (_) =>
+                      ProfessionalClientsScreen(repository: widget.repository),
                 ),
               );
             },

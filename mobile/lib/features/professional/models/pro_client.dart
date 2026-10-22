@@ -21,10 +21,9 @@ class ProClientSummary {
   final String currency;
   final DateTime? lastVisit;
 
-  String get title =>
-      displayName != null && displayName!.trim().isNotEmpty
-          ? displayName!.trim()
-          : phoneNumber;
+  String get title => displayName != null && displayName!.trim().isNotEmpty
+      ? displayName!.trim()
+      : phoneNumber;
 
   factory ProClientSummary.fromJson(Map<String, dynamic> json) {
     return ProClientSummary(
@@ -35,8 +34,7 @@ class ProClientSummary {
           int.tryParse(json['appointmentCount']?.toString() ?? '') ?? 0,
       completedCount:
           int.tryParse(json['completedCount']?.toString() ?? '') ?? 0,
-      noShowCount:
-          int.tryParse(json['noShowCount']?.toString() ?? '') ?? 0,
+      noShowCount: int.tryParse(json['noShowCount']?.toString() ?? '') ?? 0,
       totalSpent: double.tryParse(json['totalSpent']?.toString() ?? '') ?? 0,
       currency: json['currency']?.toString() ?? 'TMT',
       lastVisit: DateTime.tryParse(json['lastVisit']?.toString() ?? ''),
@@ -69,10 +67,9 @@ class ProClientDetail {
   final String? note;
   final List<ProClientAppointment> appointments;
 
-  String get title =>
-      displayName != null && displayName!.trim().isNotEmpty
-          ? displayName!.trim()
-          : phoneNumber;
+  String get title => displayName != null && displayName!.trim().isNotEmpty
+      ? displayName!.trim()
+      : phoneNumber;
 
   factory ProClientDetail.fromJson(Map<String, dynamic> json) {
     final rawAppointments = json['appointments'];
@@ -85,16 +82,15 @@ class ProClientDetail {
           int.tryParse(json['appointmentCount']?.toString() ?? '') ?? 0,
       completedCount:
           int.tryParse(json['completedCount']?.toString() ?? '') ?? 0,
-      noShowCount:
-          int.tryParse(json['noShowCount']?.toString() ?? '') ?? 0,
+      noShowCount: int.tryParse(json['noShowCount']?.toString() ?? '') ?? 0,
       totalSpent: double.tryParse(json['totalSpent']?.toString() ?? '') ?? 0,
       currency: json['currency']?.toString() ?? 'TMT',
       note: json['note']?.toString(),
       appointments: rawAppointments is List
           ? rawAppointments
-              .whereType<Map<String, dynamic>>()
-              .map(ProClientAppointment.fromJson)
-              .toList()
+                .whereType<Map<String, dynamic>>()
+                .map(ProClientAppointment.fromJson)
+                .toList()
           : const [],
     );
   }

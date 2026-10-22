@@ -11,6 +11,7 @@ import 'models/working_hours_item.dart';
 import 'models/pro_dashboard.dart';
 import '../messaging/models/booking_message.dart';
 import 'models/pro_client.dart';
+import 'models/pro_analytics.dart';
 
 class ProfessionalRepository {
   ProfessionalRepository(this._apiClient);
@@ -655,17 +656,34 @@ class ProfessionalRepository {
     }
   }
 
-  Future<void> updateClientNote(
-    String customerId,
-    String note,
-  ) async {
+  Future<void> updateClientNote(String customerId, String note) async {
     try {
       await _apiClient.dio.put<Map<String, dynamic>>(
         '/api/v1/pro/clients/$customerId/note',
-        data: {
-          'note': note.trim().isEmpty ? null : note.trim(),
-        },
+        data: {'note': note.trim().isEmpty ? null : note.trim()},
       );
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
+
+  Future<ProAnalytics> fetchAnalytics() async {
+    try {
+      final response = await _apiClient.dio.get<Map<String, dynamic>>(
+        '/api/v1/pro/analytics',
+      );
+
+      final data = response.data?['data'];
+      if (data is! Map<String, dynamic>) {
+        throw StateError('Invalid professional analytics response.');
+      }
+
+      final raw = data['analytics'];
+      if (raw is! Map<String, dynamic>) {
+        throw StateError('Invalid professional analytics response.');
+      }
+
+      return ProAnalytics.fromJson(raw);
     } on DioException catch (error) {
       throw ApiClient.mapError(error);
     }
