@@ -43,11 +43,8 @@ final class ProfessionalClientController extends AbstractController
             ], 409);
         }
 
-        $rows = $entityManager->createQueryBuilder()
-            ->select('customer.id AS customerId')
-            ->addSelect('customer.phoneNumber AS phoneNumber')
-            ->addSelect('COUNT(b.id) AS appointmentCount')
-            ->addSelect('MAX(b.startsAt) AS lastVisit')
+        $bookings = $entityManager->createQueryBuilder()
+            ->select('b', 'customer')
             ->from(Booking::class, 'b')
             ->join('b.customer', 'customer')
             ->where('b.professional = :professional')
@@ -58,23 +55,68 @@ final class ProfessionalClientController extends AbstractController
                 BookingStatus::COMPLETED,
                 BookingStatus::NO_SHOW,
             ])
-            ->groupBy('customer.id')
-            ->addGroupBy('customer.phoneNumber')
-            ->orderBy('lastVisit', 'DESC')
+            ->orderBy('b.startsAt', 'DESC')
             ->getQuery()
-            ->getArrayResult();
+            ->getResult();
+
+        $clients = [];
+
+        foreach ($bookings as $booking) {
+            if (!$booking instanceof Booking) {
+                continue;
+            }
+
+            $customer = $booking->getCustomer();
+            $customerId = (string) $customer->getId();
+
+            if (!isset($clients[$customerId])) {
+                $clients[$customerId] = [
+                    'customerId' => $customerId,
+                    'displayName' => $customer->getDisplayName(),
+                    'phoneNumber' => $customer->getPhoneNumber(),
+                    'appointmentCount' => 0,
+                    'completedCount' => 0,
+                    'noShowCount' => 0,
+                    'totalSpent' => 0.0,
+                    'currency' => $booking->getCurrency(),
+                    'lastVisit' => null,
+                ];
+            }
+
+            ++$clients[$customerId]['appointmentCount'];
+
+            if ($clients[$customerId]['lastVisit'] === null) {
+                $clients[$customerId]['lastVisit'] =
+                    $booking->getStartsAt()->format(DATE_ATOM);
+            }
+
+            if ($booking->getStatus() === BookingStatus::COMPLETED) {
+                ++$clients[$customerId]['completedCount'];
+
+                if ($booking->getPrice() !== null) {
+                    $clients[$customerId]['totalSpent'] +=
+                        (float) $booking->getPrice();
+                }
+            }
+
+            if ($booking->getStatus() === BookingStatus::NO_SHOW) {
+                ++$clients[$customerId]['noShowCount'];
+            }
+        }
 
         return $this->json([
             'data' => [
-                'clients' => array_map(
-                    static fn (array $row): array => [
-                        'customerId' => (string) $row['customerId'],
-                        'phoneNumber' => $row['phoneNumber'],
-                        'appointmentCount' => (int) $row['appointmentCount'],
-                        'lastVisit' => $row['lastVisit'],
-                    ],
-                    $rows,
-                ),
+                'clients' => array_values(array_map(
+                    static function (array $client): array {
+                        $client['totalSpent'] = round(
+                            (float) $client['totalSpent'],
+                            2,
+                        );
+
+                        return $client;
+                    },
+                    $clients,
+                )),
             ],
         ]);
     }
@@ -141,12 +183,42 @@ final class ProfessionalClientController extends AbstractController
                 'customer' => $customer,
             ]);
             
+        $completedCount = 0;
+        $noShowCount = 0;
+        $totalSpent = 0.0;
+        $currency = 'TMT';
+
+        foreach ($bookings as $booking) {
+            if (!$booking instanceof Booking) {
+                continue;
+            }
+
+            $currency = $booking->getCurrency();
+
+            if ($booking->getStatus() === BookingStatus::COMPLETED) {
+                ++$completedCount;
+
+                if ($booking->getPrice() !== null) {
+                    $totalSpent += (float) $booking->getPrice();
+                }
+            }
+
+            if ($booking->getStatus() === BookingStatus::NO_SHOW) {
+                ++$noShowCount;
+            }
+        }
+
         return $this->json([
             'data' => [
                 'client' => [
                     'id' => (string) $customer->getId(),
+                    'displayName' => $customer->getDisplayName(),
                     'phoneNumber' => $customer->getPhoneNumber(),
                     'appointmentCount' => count($bookings),
+                    'completedCount' => $completedCount,
+                    'noShowCount' => $noShowCount,
+                    'totalSpent' => round($totalSpent, 2),
+                    'currency' => $currency,
                     'note' => $clientNote?->getNote(),
                     'appointments' => array_map(
                         static fn (Booking $booking): array => [

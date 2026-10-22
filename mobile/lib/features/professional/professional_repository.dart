@@ -10,6 +10,7 @@ import 'models/pro_service.dart';
 import 'models/working_hours_item.dart';
 import 'models/pro_dashboard.dart';
 import '../messaging/models/booking_message.dart';
+import 'models/pro_client.dart';
 
 class ProfessionalRepository {
   ProfessionalRepository(this._apiClient);
@@ -606,6 +607,65 @@ class ProfessionalRepository {
       }
 
       return BookingMessage.fromJson(raw);
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
+
+  Future<List<ProClientSummary>> fetchClients() async {
+    try {
+      final response = await _apiClient.dio.get<Map<String, dynamic>>(
+        '/api/v1/pro/clients',
+      );
+
+      final data = response.data?['data'];
+      if (data is! Map<String, dynamic>) return const [];
+
+      final raw = data['clients'];
+      if (raw is! List) return const [];
+
+      return raw
+          .whereType<Map<String, dynamic>>()
+          .map(ProClientSummary.fromJson)
+          .toList();
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
+
+  Future<ProClientDetail> fetchClient(String customerId) async {
+    try {
+      final response = await _apiClient.dio.get<Map<String, dynamic>>(
+        '/api/v1/pro/clients/$customerId',
+      );
+
+      final data = response.data?['data'];
+      if (data is! Map<String, dynamic>) {
+        throw StateError('Invalid professional client response.');
+      }
+
+      final raw = data['client'];
+      if (raw is! Map<String, dynamic>) {
+        throw StateError('Invalid professional client response.');
+      }
+
+      return ProClientDetail.fromJson(raw);
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
+
+  Future<void> updateClientNote(
+    String customerId,
+    String note,
+  ) async {
+    try {
+      await _apiClient.dio.put<Map<String, dynamic>>(
+        '/api/v1/pro/clients/$customerId/note',
+        data: {
+          'note': note.trim().isEmpty ? null : note.trim(),
+        },
+      );
     } on DioException catch (error) {
       throw ApiClient.mapError(error);
     }
