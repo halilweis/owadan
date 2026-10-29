@@ -256,6 +256,9 @@ final class ProfessionalController extends AbstractController
 
     private function profilePayload(ProfessionalProfile $profile): array
     {
+        $district = $profile->getDistrict();
+        $city = $district?->getCity();
+
         return [
             'id' => $profile->getId()->toRfc4122(),
             'displayName' => $profile->getDisplayName(),
@@ -263,6 +266,14 @@ final class ProfessionalController extends AbstractController
             'experienceYears' => $profile->getExperienceYears(),
             'languages' => $profile->getLanguages(),
             'verificationStatus' => $profile->getVerificationStatus()->value,
+            'location' => $district === null
+                ? null
+                : [
+                    'districtId' => $district->getId(),
+                    'districtName' => $district->getName(),
+                    'cityId' => $city?->getId(),
+                    'cityName' => $city?->getName(),
+                ],
         ];
     }
 

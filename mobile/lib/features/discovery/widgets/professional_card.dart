@@ -9,6 +9,7 @@ class ProfessionalCard extends StatelessWidget {
     required this.onTap,
     super.key,
   });
+
   final ProfessionalSummary professional;
   final VoidCallback onTap;
 
@@ -16,6 +17,7 @@ class ProfessionalCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
+    final location = professional.locationLabel;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -52,6 +54,22 @@ class ProfessionalCard extends StatelessWidget {
                           Icon(Icons.verified, size: 20, color: scheme.primary),
                       ],
                     ),
+                    if (location != null) ...[
+                      const SizedBox(height: 5),
+                      Row(
+                        children: [
+                          const Icon(Icons.location_on_outlined, size: 17),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              location,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 6),
                     Text(
                       professional.minPrice == null

@@ -8,6 +8,7 @@ import 'models/professional_review.dart';
 import 'models/professional_service.dart';
 import 'models/professional_summary.dart';
 import 'models/professional_portfolio_item.dart';
+import 'models/location_option.dart';
 
 class ProfessionalsPage {
   const ProfessionalsPage({
@@ -75,6 +76,8 @@ class DiscoveryRepository {
     String sort = 'rating',
     int page = 1,
     int size = 20,
+    int? cityId,
+    int? districtId,
   }) async {
     try {
       final params = <String, dynamic>{
@@ -106,6 +109,14 @@ class DiscoveryRepository {
 
       if (minRating != null) {
         params['minRating'] = minRating;
+      }
+
+      if (cityId != null) {
+        params['cityId'] = cityId;
+      }
+
+      if (districtId != null) {
+        params['districtId'] = districtId;
       }
 
       if (availableDate != null) {
@@ -291,6 +302,27 @@ class DiscoveryRepository {
       return raw
           .whereType<Map<String, dynamic>>()
           .map(ProfessionalPortfolioItem.fromJson)
+          .toList();
+    } on DioException catch (error) {
+      throw ApiClient.mapError(error);
+    }
+  }
+
+  Future<List<LocationCity>> fetchLocations() async {
+    try {
+      final response = await _apiClient.dio.get<Map<String, dynamic>>(
+        '/api/v1/locations',
+      );
+
+      final data = response.data?['data'];
+      if (data is! Map<String, dynamic>) return const [];
+
+      final raw = data['cities'];
+      if (raw is! List) return const [];
+
+      return raw
+          .whereType<Map<String, dynamic>>()
+          .map(LocationCity.fromJson)
           .toList();
     } on DioException catch (error) {
       throw ApiClient.mapError(error);

@@ -318,7 +318,21 @@ class _ProfileHeader extends StatelessWidget {
                         Icon(Icons.verified, color: scheme.primary),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  if (professional.locationLabel != null) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.location_on_outlined, size: 19),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: Text(
+                            professional.locationLabel!,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                   Row(
                     children: [
                       const Icon(Icons.star_rounded, size: 20),

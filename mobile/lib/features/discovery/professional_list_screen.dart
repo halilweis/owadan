@@ -8,6 +8,7 @@ import 'models/category_model.dart';
 import 'models/professional_summary.dart';
 import 'professional_detail_screen.dart';
 import 'widgets/professional_card.dart';
+import 'models/location_option.dart';
 
 class ProfessionalListScreen extends StatefulWidget {
   const ProfessionalListScreen({
@@ -46,6 +47,10 @@ class _ProfessionalListScreenState extends State<ProfessionalListScreen> {
   int _page = 1;
   int _pages = 1;
 
+  List<LocationCity> _locations = const [];
+  int? _selectedCityId;
+  int? _selectedDistrictId;
+
   @override
   void initState() {
     super.initState();
@@ -70,15 +75,19 @@ class _ProfessionalListScreenState extends State<ProfessionalListScreen> {
     try {
       final results = await Future.wait([
         widget.repository.fetchCategories(),
+        widget.repository.fetchLocations(),
         _fetchPage(1),
       ]);
 
       if (!mounted) return;
 
-      final page = results[1] as ProfessionalsPage;
+      final categories = results[0] as List<CategoryModel>;
+      final locations = results[1] as List<LocationCity>;
+      final page = results[2] as ProfessionalsPage;
 
       setState(() {
-        _categories = results[0] as List<CategoryModel>;
+        _categories = categories;
+        _locations = locations;
         _professionals = page.items;
         _page = page.page;
         _pages = page.pages;
@@ -108,6 +117,8 @@ class _ProfessionalListScreenState extends State<ProfessionalListScreen> {
       sort: _sort,
       page: page,
       size: 20,
+      cityId: _selectedCityId,
+      districtId: _selectedDistrictId,
     );
   }
 
@@ -173,6 +184,8 @@ class _ProfessionalListScreenState extends State<ProfessionalListScreen> {
       _sort = 'rating';
       _minRating = null;
       _availableDate = null;
+      _selectedCityId = null;
+      _selectedDistrictId = null;
     });
 
     _applyFilters();
@@ -187,6 +200,17 @@ class _ProfessionalListScreenState extends State<ProfessionalListScreen> {
     }
 
     return widget.category;
+  }
+
+  LocationCity? get _selectedCity {
+    final id = _selectedCityId;
+    if (id == null) return null;
+
+    for (final city in _locations) {
+      if (city.id == id) return city;
+    }
+
+    return null;
   }
 
   String _dateValue(DateTime value) {
@@ -242,6 +266,81 @@ class _ProfessionalListScreenState extends State<ProfessionalListScreen> {
                             ?.copyWith(fontWeight: FontWeight.w800),
                       ),
                       const SizedBox(height: 18),
+                      DropdownButtonFormField<int?>(
+                        initialValue: _selectedCityId,
+                        decoration: InputDecoration(
+                          labelText: _text(
+                            en: 'City',
+                            ru: 'Город',
+                            tk: 'Şäher',
+                          ),
+                          prefixIcon: const Icon(Icons.location_city_outlined),
+                        ),
+                        items: [
+                          DropdownMenuItem<int?>(
+                            value: null,
+                            child: Text(
+                              _text(
+                                en: 'All cities',
+                                ru: 'Все города',
+                                tk: 'Ähli şäherler',
+                              ),
+                            ),
+                          ),
+                          ..._locations.map(
+                            (city) => DropdownMenuItem<int?>(
+                              value: city.id,
+                              child: Text(city.name),
+                            ),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          setModalState(() {
+                            _selectedCityId = value;
+                            _selectedDistrictId = null;
+                          });
+                          setState(() {});
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      if (_selectedCity != null) ...[
+                        DropdownButtonFormField<int?>(
+                          initialValue: _selectedDistrictId,
+                          decoration: InputDecoration(
+                            labelText: _text(
+                              en: 'District',
+                              ru: 'Район',
+                              tk: 'Etrap',
+                            ),
+                            prefixIcon: const Icon(Icons.place_outlined),
+                          ),
+                          items: [
+                            DropdownMenuItem<int?>(
+                              value: null,
+                              child: Text(
+                                _text(
+                                  en: 'All districts',
+                                  ru: 'Все районы',
+                                  tk: 'Ähli etraplar',
+                                ),
+                              ),
+                            ),
+                            ..._selectedCity!.districts.map(
+                              (district) => DropdownMenuItem<int?>(
+                                value: district.id,
+                                child: Text(district.name),
+                              ),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            setModalState(() {
+                              _selectedDistrictId = value;
+                            });
+                            setState(() {});
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                      ],
                       DropdownButtonFormField<String?>(
                         initialValue: _selectedCategorySlug,
                         decoration: InputDecoration(
@@ -546,6 +645,8 @@ class _ProfessionalListScreenState extends State<ProfessionalListScreen> {
 
   int get _activeFilterCount {
     var count = 0;
+    if (_selectedCityId != null) count++;
+    if (_selectedDistrictId != null) count++;
     if (_selectedSubcategorySlug != null) count++;
     if (_minPriceController.text.trim().isNotEmpty) count++;
     if (_maxPriceController.text.trim().isNotEmpty) count++;
@@ -642,7 +743,9 @@ class _ProfessionalListScreenState extends State<ProfessionalListScreen> {
           onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: 12),
-        if (_selectedCategorySlug != null ||
+        if (_selectedCityId != null ||
+            _selectedDistrictId != null ||
+            _selectedCategorySlug != null ||
             _selectedSubcategorySlug != null ||
             _availableDate != null ||
             _minRating != null)
@@ -650,6 +753,22 @@ class _ProfessionalListScreenState extends State<ProfessionalListScreen> {
             spacing: 8,
             runSpacing: 8,
             children: [
+              if (_selectedCity != null)
+                Chip(
+                  avatar: const Icon(Icons.location_city_outlined, size: 18),
+                  label: Text(_selectedCity!.name),
+                ),
+              if (_selectedDistrictId != null && _selectedCity != null)
+                Chip(
+                  avatar: const Icon(Icons.place_outlined, size: 18),
+                  label: Text(
+                    _selectedCity!.districts
+                        .firstWhere(
+                          (district) => district.id == _selectedDistrictId,
+                        )
+                        .name,
+                  ),
+                ),
               if (_selectedCategory != null)
                 Chip(
                   label: Text(
@@ -664,7 +783,9 @@ class _ProfessionalListScreenState extends State<ProfessionalListScreen> {
                 Chip(label: Text('${_minRating!.toStringAsFixed(1)}+ ★')),
             ],
           ),
-        if (_selectedCategorySlug != null ||
+        if (_selectedCityId != null ||
+            _selectedDistrictId != null ||
+            _selectedCategorySlug != null ||
             _selectedSubcategorySlug != null ||
             _availableDate != null ||
             _minRating != null)

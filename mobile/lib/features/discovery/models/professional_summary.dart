@@ -10,6 +10,10 @@ class ProfessionalSummary {
     this.averageRating,
     this.minPrice,
     this.nextAvailableAt,
+    this.cityId,
+    this.cityName,
+    this.districtId,
+    this.districtName,
     this.languages = const [],
   });
 
@@ -25,21 +29,54 @@ class ProfessionalSummary {
   final String currency;
   final DateTime? nextAvailableAt;
 
+  final int? cityId;
+  final String? cityName;
+  final int? districtId;
+  final String? districtName;
+
+  String? get locationLabel {
+    final district = districtName?.trim();
+    final city = cityName?.trim();
+
+    if (district != null &&
+        district.isNotEmpty &&
+        city != null &&
+        city.isNotEmpty) {
+      return '$district, $city';
+    }
+
+    if (city != null && city.isNotEmpty) return city;
+    if (district != null && district.isNotEmpty) return district;
+
+    return null;
+  }
+
   factory ProfessionalSummary.fromJson(Map<String, dynamic> json) {
+    final rawLocation = json['location'];
+    final location = rawLocation is Map<String, dynamic>
+        ? rawLocation
+        : const <String, dynamic>{};
+
     return ProfessionalSummary(
       id: json['id']?.toString() ?? '',
       displayName: json['displayName']?.toString() ?? '',
       bio: json['bio']?.toString(),
-      experienceYears: json['experienceYears'] as int?,
+      experienceYears: json['experienceYears'] is int
+          ? json['experienceYears'] as int
+          : int.tryParse(json['experienceYears']?.toString() ?? ''),
       languages: (json['languages'] as List<dynamic>? ?? const [])
           .map((item) => item.toString())
           .toList(),
       verificationStatus: json['verificationStatus']?.toString() ?? 'UNKNOWN',
       averageRating: _toDouble(json['averageRating']),
-      reviewCount: json['reviewCount'] as int? ?? 0,
+      reviewCount: int.tryParse(json['reviewCount']?.toString() ?? '') ?? 0,
       minPrice: _toDouble(json['minPrice']),
       currency: json['currency']?.toString() ?? 'TMT',
       nextAvailableAt: _toDateTime(json['nextAvailableAt']),
+      cityId: int.tryParse(location['cityId']?.toString() ?? ''),
+      cityName: location['cityName']?.toString(),
+      districtId: int.tryParse(location['districtId']?.toString() ?? ''),
+      districtName: location['districtName']?.toString(),
     );
   }
 
