@@ -39,6 +39,8 @@ final class ProfessionalProfileRepository extends ServiceEntityRepository
      *     page?: int,
      *     size?: int,
      *     paginate?: bool,
+     *     q?: mixed,
+     *     minRating?: mixed,
      * } $filters
      *
      * @return array{
@@ -65,6 +67,13 @@ final class ProfessionalProfileRepository extends ServiceEntityRepository
         $maxPrice = array_key_exists('maxPrice', $filters)
             ? $filters['maxPrice']
             : null;
+        $query = isset($filters['q'])
+            ? trim((string) $filters['q'])
+            : '';
+
+        $minRating = array_key_exists('minRating', $filters)
+            ? $filters['minRating']
+            : null;
 
         $sort = isset($filters['sort'])
             ? (string) $filters['sort']
@@ -79,6 +88,25 @@ final class ProfessionalProfileRepository extends ServiceEntityRepository
             ->andWhere('p.verificationStatus = :status')
             ->setParameter('active', true)
             ->setParameter('status', VerificationStatus::APPROVED);
+        
+        if ($query !== '') {
+            $qb
+                ->leftJoin(
+                    ProfessionalService::class,
+                    'searchService',
+                    Join::WITH,
+                    'searchService.professional = p AND searchService.active = true'
+                )
+                ->andWhere(
+                    $qb->expr()->orX(
+                        'LOWER(p.displayName) LIKE LOWER(:query)',
+                        'LOWER(COALESCE(p.bio, \'\')) LIKE LOWER(:query)',
+                        'LOWER(searchService.name) LIKE LOWER(:query)'
+                    )
+                )
+                ->setParameter('query', '%' . $query . '%')
+                ->groupBy('p.id');
+        }
 
         if (!empty($filters['cityId'])) {
             $qb
@@ -159,6 +187,36 @@ final class ProfessionalProfileRepository extends ServiceEntityRepository
                 ->setParameter('maxPrice', (string) $maxPrice);
         }
 
+        $needsRatingJoin =
+            $sort === 'rating'
+            || ($minRating !== null && $minRating !== '');
+
+        if ($needsRatingJoin) {
+            $qb
+                ->leftJoin(
+                    Review::class,
+                    'r',
+                    Join::WITH,
+                    'r.professional = p'
+                )
+                ->addSelect(
+                    'COALESCE(AVG(r.rating), 0) AS HIDDEN averageRating'
+                )
+                ->groupBy('p.id');
+        }
+
+        if ($minRating !== null && $minRating !== '') {
+            $rating = (float) $minRating;
+
+            if ($rating >= 1 && $rating <= 5) {
+                $qb
+                    ->having(
+                        'COALESCE(AVG(r.rating), 0) >= :minRating'
+                    )
+                    ->setParameter('minRating', $rating);
+            }
+        }
+
         switch ($sort) {
             case 'price_asc':
                 $qb
@@ -178,14 +236,6 @@ final class ProfessionalProfileRepository extends ServiceEntityRepository
 
             case 'rating':
                 $qb
-                    ->leftJoin(
-                        Review::class,
-                        'r',
-                        Join::WITH,
-                        'r.professional = p'
-                    )
-                    ->addSelect('COALESCE(AVG(r.rating), 0) AS HIDDEN averageRating')
-                    ->groupBy('p.id')
                     ->orderBy('averageRating', 'DESC')
                     ->addOrderBy('p.displayName', 'ASC');
                 break;

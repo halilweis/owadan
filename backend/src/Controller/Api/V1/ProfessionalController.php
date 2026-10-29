@@ -86,6 +86,20 @@ final class ProfessionalController extends AbstractController
                     maximum: 50
                 )
             ),
+            new OA\Parameter(
+                name: 'q',
+                in: 'query',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'minRating',
+                in: 'query',
+                schema: new OA\Schema(
+                    type: 'number',
+                    minimum: 1,
+                    maximum: 5
+                )
+            ),
         ],
         responses: [
             new OA\Response(response: 200, description: 'Professional search results'),
@@ -106,12 +120,14 @@ final class ProfessionalController extends AbstractController
         $availableDate = trim((string) $request->query->get('availableDate', ''));
 
         $filters = [
+            'q' => $request->query->get('q'),
             'category' => $request->query->get('category'),
             'subcategory' => $request->query->get('subcategory'),
             'cityId' => $request->query->get('cityId'),
             'districtId' => $request->query->get('districtId'),
             'minPrice' => $request->query->get('minPrice'),
             'maxPrice' => $request->query->get('maxPrice'),
+            'minRating' => $request->query->get('minRating'),
             'verified' => $request->query->get('verified'),
             'sort' => $request->query->get('sort', 'name'),
             'page' => $page,

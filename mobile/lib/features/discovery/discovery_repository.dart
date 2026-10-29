@@ -65,20 +65,59 @@ class DiscoveryRepository {
   }
 
   Future<ProfessionalsPage> fetchProfessionals({
+    String? query,
     String? categorySlug,
+    String? subcategorySlug,
+    double? minPrice,
+    double? maxPrice,
+    double? minRating,
+    DateTime? availableDate,
+    String sort = 'rating',
     int page = 1,
     int size = 20,
   }) async {
     try {
-      final query = <String, dynamic>{'page': page, 'size': size};
+      final params = <String, dynamic>{
+        'page': page,
+        'size': size,
+        'sort': sort,
+      };
+
+      final q = query?.trim() ?? '';
+      if (q.isNotEmpty) {
+        params['q'] = q;
+      }
 
       if (categorySlug != null && categorySlug.isNotEmpty) {
-        query['category'] = categorySlug;
+        params['category'] = categorySlug;
+      }
+
+      if (subcategorySlug != null && subcategorySlug.isNotEmpty) {
+        params['subcategory'] = subcategorySlug;
+      }
+
+      if (minPrice != null) {
+        params['minPrice'] = minPrice;
+      }
+
+      if (maxPrice != null) {
+        params['maxPrice'] = maxPrice;
+      }
+
+      if (minRating != null) {
+        params['minRating'] = minRating;
+      }
+
+      if (availableDate != null) {
+        params['availableDate'] =
+            '${availableDate.year}-'
+            '${availableDate.month.toString().padLeft(2, '0')}-'
+            '${availableDate.day.toString().padLeft(2, '0')}';
       }
 
       final response = await _apiClient.dio.get<Map<String, dynamic>>(
         '/api/v1/professionals',
-        queryParameters: query,
+        queryParameters: params,
       );
 
       final body = response.data ?? const <String, dynamic>{};
@@ -98,10 +137,10 @@ class DiscoveryRepository {
 
       return ProfessionalsPage(
         items: items,
-        page: meta['page'] as int? ?? page,
-        size: meta['size'] as int? ?? size,
-        total: meta['total'] as int? ?? items.length,
-        pages: meta['pages'] as int? ?? 1,
+        page: int.tryParse(meta['page']?.toString() ?? '') ?? page,
+        size: int.tryParse(meta['size']?.toString() ?? '') ?? size,
+        total: int.tryParse(meta['total']?.toString() ?? '') ?? items.length,
+        pages: int.tryParse(meta['pages']?.toString() ?? '') ?? 1,
       );
     } on DioException catch (error) {
       throw ApiClient.mapError(error);
